@@ -4,6 +4,7 @@ import java.util.List;
 
 import game.Card;
 import game.CardPair;
+import game.CardType;
 import game.Game;
 import game.Player;
 
@@ -27,7 +28,12 @@ public class AmbassadorAction implements Action {
 	}
 
 	@Override
-	public Player targetedPlayer() {
+	public List<Player> targetedPlayers() {
+		return null;
+	}
+
+	@Override
+	public CardType cardTypeRequired() {
 		return null;
 	}
 

@@ -1,6 +1,7 @@
 package game;
 
 import game.actions.Action;
+import game.actions.BluffCallerOption;
 import game.actions.Defense;
 import game.actions.DefenseChooser;
 
@@ -81,6 +82,11 @@ public class Game {
 			CardType cardAccussedPlayerClaimedToHave) {
 		return !players.get(accussedPlayerNumber).has(cardAccussedPlayerClaimedToHave);
 	}
+	
+	private boolean isPlayerRightAboutOtherPlayerNotHavingCard(Player accusingPlayer, Player accussedPlayer,
+			CardType cardAccussedPlayerClaimedToHave) {
+		return !accussedPlayer.has(cardAccussedPlayerClaimedToHave);
+	}
 
 	public void playerAccussesOtherPlayerOfBluffing(int accusingPlayerNumber, int accussedPlayerNumber,
 			CardType cardAccussedPlayerClaimedToHave) {
@@ -96,14 +102,20 @@ public class Game {
 
 	private void reshuffleCardAndDrawNewCard(int accussedPlayerNumber,
 			CardType cardAccussedPlayerClaimedToHave) {
-		if(players.get(accussedPlayerNumber).getFirstCard().getType().equals(cardAccussedPlayerClaimedToHave)){
-			Card cardAccusedOfNotHaving = players.get(accussedPlayerNumber).getFirstCard();
+		Player accussedPlayer = players.get(accussedPlayerNumber);
+		reshuffleCardAndDrawNewCard(accussedPlayer, cardAccussedPlayerClaimedToHave);
+	}
+
+	private void reshuffleCardAndDrawNewCard(
+			Player accussedPlayer, CardType cardAccussedPlayerClaimedToHave) {
+		if(accussedPlayer.getFirstCard().getType().equals(cardAccussedPlayerClaimedToHave)){
+			Card cardAccusedOfNotHaving = accussedPlayer.getFirstCard();
 			deck.takeCardBack(cardAccusedOfNotHaving);
-			players.get(accussedPlayerNumber).replaceFirstCard(deck.deal());
+			accussedPlayer.replaceFirstCard(deck.deal());
 		}else{
-			Card cardAccusedOfNotHaving = players.get(accussedPlayerNumber).getSecondCard();
+			Card cardAccusedOfNotHaving = accussedPlayer.getSecondCard();
 			deck.takeCardBack(cardAccusedOfNotHaving);
-			players.get(accussedPlayerNumber).replaceSecondCard(deck.deal());
+			accussedPlayer.replaceSecondCard(deck.deal());
 		}
 	}
 
@@ -118,15 +130,56 @@ public class Game {
 	
 	private int currentPlayerNum = 0;
 	private DefenseChooser defenseChooser;
+	private BluffCallerOption bluffCallerOption;
 	public void oneTurn() {
 		Player currentPlayer = getPlayer(currentPlayerNum);
 		Action chosenAction = actionChooser.chooseAction(currentPlayer);
-		if(chosenAction.targetedPlayer() != null){
+		
+		for(int i = 0; i < players.size(); i++){
+			if(chosenAction.cardTypeRequired() != null && bluffCallerOption.callBluff(getPlayer(i), currentPlayer, chosenAction.cardTypeRequired())){
+				if(isPlayerRightAboutOtherPlayerNotHavingCard(1,currentPlayerNum,chosenAction.cardTypeRequired())){
+					currentPlayer.revealACard();
+					currentPlayerNum = (currentPlayerNum + 1) % players.size();
+					return;
+				}else{
+					getPlayer(i).revealACard();
+					//FIXME Need to reshuffle one of the cards??
+					break;
+				}
+			}
+		}
+		
+		//FIXME should NOT be able to/have to defend after bluff is called successfully?  What if bluff called unsuccessfully?
+		if(chosenAction.targetedPlayers() != null){
 			//FIXME need to give defense options based on chosen action...
-			Defense chosenDefense = this.defenseChooser.chooseDefense(chosenAction.targetedPlayer());
-			if(chosenDefense != null){
-				chosenDefense.defendAgainstPlayer(currentPlayer);
-			}else{
+			boolean blocked = false;
+			for(Player playerWhoCanBlock : chosenAction.targetedPlayers()){
+				Defense chosenDefense = this.defenseChooser.chooseDefense(playerWhoCanBlock);
+				
+				//FIXME should allow other players to call bluff on block too??  Not just current player?
+				
+				if(chosenDefense != null){
+					
+					if(chosenDefense.cardTypeRequired() != null && 
+							bluffCallerOption.callBluff(currentPlayer, playerWhoCanBlock, chosenDefense.cardTypeRequired())){
+						if(isPlayerRightAboutOtherPlayerNotHavingCard(currentPlayer, playerWhoCanBlock, chosenDefense.cardTypeRequired())){
+							playerWhoCanBlock.revealACard();
+							chosenAction.performAction(currentPlayer);
+							currentPlayerNum = (currentPlayerNum + 1) % players.size();
+							return;
+						}else{
+							currentPlayer.revealACard();
+							reshuffleCardAndDrawNewCard(playerWhoCanBlock,chosenDefense.cardTypeRequired());
+						}
+					}
+					
+					
+					chosenDefense.defendAgainstPlayer(currentPlayer);
+					blocked = true;
+					break;
+				}
+			}
+			if(!blocked){
 				chosenAction.performAction(currentPlayer);
 			}
 		}else{
@@ -139,6 +192,10 @@ public class Game {
 	public void setDefenseChooser(DefenseChooser defenseChooser) {
 		this.defenseChooser = defenseChooser;
 		
+	}
+
+	public void setBluffCallerOption(BluffCallerOption bluffCallerOption) {
+		this.bluffCallerOption = bluffCallerOption;
 	}
 
 }

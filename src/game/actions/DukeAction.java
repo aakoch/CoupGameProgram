@@ -1,6 +1,9 @@
 package game.actions;
 
+import game.CardType;
 import game.Player;
+
+import java.util.List;
 
 public class DukeAction implements Action {
 
@@ -10,9 +13,13 @@ public class DukeAction implements Action {
 	}
 
 	@Override
-	public Player targetedPlayer() {
-		// TODO Should return all players??  Anyone has a chance to block this...
+	public List<Player> targetedPlayers() {
 		return null;
+	}
+
+	@Override
+	public CardType cardTypeRequired() {
+		return CardType.duke;
 	}
 	
 	

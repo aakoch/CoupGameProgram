@@ -1,6 +1,9 @@
 package game.actions;
 
+import game.CardType;
 import game.Player;
+
+import java.util.List;
 
 public class IncomeAction implements Action {
 
@@ -10,8 +13,12 @@ public class IncomeAction implements Action {
 	}
 
 	@Override
-	public Player targetedPlayer() {
-		// TODO Auto-generated method stub
+	public List<Player> targetedPlayers() {
+		return null;
+	}
+
+	@Override
+	public CardType cardTypeRequired() {
 		return null;
 	}
 

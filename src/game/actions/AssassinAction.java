@@ -1,6 +1,10 @@
 package game.actions;
 
+import game.CardType;
 import game.Player;
+
+import java.util.Arrays;
+import java.util.List;
 
 public class AssassinAction implements Action {
 
@@ -18,8 +22,14 @@ public class AssassinAction implements Action {
 	}
 
 	@Override
-	public Player targetedPlayer() {
-		return playerToAssassinate;
+	public List<Player> targetedPlayers() {
+		return Arrays.asList(playerToAssassinate);
+	}
+
+	@Override
+	public CardType cardTypeRequired() {
+		// TODO Auto-generated method stub
+		return null;
 	}
 	
 }

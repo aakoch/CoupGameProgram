@@ -3,12 +3,11 @@ package game.actions;
 import game.CardType;
 import game.Player;
 
-public class ContessaDefense implements Defense {
+public class AmbassadorDefense implements Defense {
 
 	@Override
 	public void defendAgainstPlayer(Player player) {
-		//Other player still has to pay for assassination
-		player.takeActionAssassin();
+		// Nothing happens
 	}
 
 	@Override
@@ -16,6 +15,5 @@ public class ContessaDefense implements Defense {
 		// TODO Auto-generated method stub
 		return null;
 	}
-	
 
 }
