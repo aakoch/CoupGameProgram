@@ -22,4 +22,14 @@ public class IncomeAction implements Action {
 		return null;
 	}
 
+	@Override
+	public boolean canPerformAction(Player player) {
+		return true;
+	}
+
+	@Override
+	public String actionDescription() {
+		return "Income: gain one coin, unblockable";
+	}
+
 }

@@ -28,8 +28,17 @@ public class AssassinAction implements Action {
 
 	@Override
 	public CardType cardTypeRequired() {
-		// TODO Auto-generated method stub
-		return null;
+		return CardType.assassin;
+	}
+
+	@Override
+	public boolean canPerformAction(Player player) {
+		return player.getCoins() >= 3;
+	}
+
+	@Override
+	public String actionDescription() {
+		return "Assassin: pay 3 coins and choose player to lose influence, blockable by contessa";
 	}
 	
 }

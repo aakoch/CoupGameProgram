@@ -30,5 +30,15 @@ public class CoupAction implements Action {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override //FIXME Need to have other actions not performable if have 10 or more coins
+	public boolean canPerformAction(Player player) {
+		return player.getCoins() >= 7;
+	}
+
+	@Override
+	public String actionDescription() {
+		return "Coup: pay 7 coins and choose player to lose influence, unblockable";
+	}
 	
 }

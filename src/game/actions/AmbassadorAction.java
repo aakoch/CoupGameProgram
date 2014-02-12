@@ -37,4 +37,15 @@ public class AmbassadorAction implements Action {
 		return null;
 	}
 
+	@Override
+	public boolean canPerformAction(Player player) {
+		return true;
+	}
+
+	@Override
+	public String actionDescription() {
+		return "Ambassador: draw two cards, choose two cards from these and your current cards, unblockable";
+	}
+	
+
 }

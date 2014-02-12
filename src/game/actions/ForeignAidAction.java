@@ -30,4 +30,14 @@ public class ForeignAidAction implements Action {
 		return null;
 	}
 
+	@Override
+	public boolean canPerformAction(Player player) {
+		return true;
+	}
+
+	@Override
+	public String actionDescription() {
+		return "Foreign Aid: gain two coins, blockable by duke";
+	}
+
 }

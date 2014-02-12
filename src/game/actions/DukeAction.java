@@ -21,6 +21,16 @@ public class DukeAction implements Action {
 	public CardType cardTypeRequired() {
 		return CardType.duke;
 	}
+
+	@Override
+	public boolean canPerformAction(Player player) {
+		return true;
+	}
+
+	@Override
+	public String actionDescription() {
+		return "Duke: gain three coins, unblockable";
+	}
 	
 	
 }

@@ -29,5 +29,15 @@ public class CaptainAction implements Action {
 		// TODO Auto-generated method stub
 		return null;
 	}
+
+	@Override
+	public boolean canPerformAction(Player player) {
+		return true;
+	}
+
+	@Override
+	public String actionDescription() {
+		return "Captain: choose player from whom to steal two coins, blockable by captain and ambassador";
+	}
 	
 }
