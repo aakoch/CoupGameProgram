@@ -1,12 +1,13 @@
 package game.actions;
 
-import java.util.List;
-
 import game.Card;
 import game.CardPair;
 import game.CardType;
 import game.Game;
 import game.Player;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class AmbassadorAction implements Action {
 
@@ -43,7 +44,7 @@ public class AmbassadorAction implements Action {
 
 	@Override
 	public CardType cardTypeRequired() {
-		return null;
+		return CardType.ambassador;
 	}
 
 	@Override
@@ -54,6 +55,11 @@ public class AmbassadorAction implements Action {
 	@Override
 	public String actionDescription() {
 		return "Ambassador: draw two cards, choose two cards from these and your current cards, unblockable";
+	}
+
+	@Override
+	public List<Defense> defensesThatCanBlock() {
+		return new ArrayList<Defense>();
 	}
 	
 

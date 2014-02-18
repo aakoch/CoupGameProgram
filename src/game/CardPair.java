@@ -27,8 +27,15 @@ public class CardPair {
 	}
 	
 	public boolean has(CardType cardType) {
-		return card.getType() == cardType || card2.getType() == cardType;
+		return (card.getType() == cardType && !card.isRevealed()) || 
+				(card2.getType() == cardType && !card2.isRevealed());
 	}
+	
+//	public Card matchingCard(CardType cardType){
+//		if((card.getType() == cardType && !card.isRevealed())){
+//			return card;
+//		}
+//	}
 	
 
 }

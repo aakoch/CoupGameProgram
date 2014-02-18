@@ -12,8 +12,7 @@ public class AmbassadorDefense implements Defense {
 
 	@Override
 	public CardType cardTypeRequired() {
-		// TODO Auto-generated method stub
-		return null;
+		return CardType.ambassador;
 	}
 
 }

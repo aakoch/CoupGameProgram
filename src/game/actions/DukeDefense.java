@@ -7,7 +7,6 @@ public class DukeDefense implements Defense {
 
 	@Override
 	public void defendAgainstPlayer(Player player) {
-		// TODO Auto-generated method stub
 
 	}
 

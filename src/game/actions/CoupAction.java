@@ -3,6 +3,7 @@ package game.actions;
 import game.CardType;
 import game.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class CoupAction implements Action {
@@ -39,6 +40,11 @@ public class CoupAction implements Action {
 	@Override
 	public String actionDescription() {
 		return "Coup: pay 7 coins make " + playerToBeCouped + " lose influence, unblockable";
+	}
+
+	@Override
+	public List<Defense> defensesThatCanBlock() {
+		return new ArrayList<Defense>();
 	}
 	
 }

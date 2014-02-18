@@ -128,9 +128,10 @@ public class Game {
 		reshuffleCardAndDrawNewCard(accussedPlayer, cardAccussedPlayerClaimedToHave);
 	}
 
-	private void reshuffleCardAndDrawNewCard(
+	public void reshuffleCardAndDrawNewCard(
 			Player accussedPlayer, CardType cardAccussedPlayerClaimedToHave) {
-		if(accussedPlayer.getFirstCard().getType().equals(cardAccussedPlayerClaimedToHave)){
+		if(!accussedPlayer.getFirstCard().isRevealed() && 
+				accussedPlayer.getFirstCard().getType().equals(cardAccussedPlayerClaimedToHave)){
 			Card cardAccusedOfNotHaving = accussedPlayer.getFirstCard();
 			deck.takeCardBack(cardAccusedOfNotHaving);
 			accussedPlayer.replaceFirstCard(deck.deal());

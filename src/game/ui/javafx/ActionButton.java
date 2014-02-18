@@ -3,8 +3,11 @@ package game.ui.javafx;
 import game.CardType;
 import game.Player;
 import game.actions.Action;
-import game.actions.AssassinAction;
-import game.actions.ContessaDefense;
+import game.actions.Defense;
+
+import java.util.ArrayList;
+import java.util.List;
+
 import javafx.event.Event;
 import javafx.event.EventHandler;
 import javafx.scene.control.Button;
@@ -21,7 +24,15 @@ public class ActionButton extends Button {
 	}
 	
 	public String getActionName(){
-		return action.getClass().getCanonicalName();
+		return action.getClass().getName();
+	}
+	
+	public CardType getRequiredCard(){
+		return action.cardTypeRequired();
+	}
+	
+	public String getPlayerName(){
+		return player.toString();
 	}
 	
 	public ActionButton(final Action action, final Player player, final IndividualPlayer playerUI, final boolean advanceToNextPlayerOnClick){
@@ -35,32 +46,93 @@ public class ActionButton extends Button {
 			@Override
 			public void handle(Event arg0) {
 				playerUI.disableAllActions();
-				//TODO give other players chance to call bluff
-				if(action instanceof AssassinAction){ //TODO check to see if there are players who can block??
-					//FIXME don't special case it like this! - make multiple options available!
-					PlayerWithChoices respondingPlayer = (PlayerWithChoices) action.targetedPlayers().get(0);
-					respondingPlayer.checkIfWantToBlock(ActionButton.this, CardType.contessa);
+				
+				if(action.cardTypeRequired() != null){
+					numNeedingToNotCallBluff = playerUI.getNumberOfOtherPlayers();
+					playerUI.giveOtherPlayersChanceToCallBluff(ActionButton.this);
 				}else{
-					continueAction(false);
+					numNeedingToNotCallBluff = 0;
+					continueAfterBluffCall(false,null);
 				}
+				
 			}
 		});
 	}
 	
-	public void continueAction(boolean blocked){
-		if(blocked){
-			new ContessaDefense().defendAgainstPlayer(player);
+	int numNeedingToNotBlock = 0;
+	List<PlayerWithChoices> playersWhoCanBlock;
+	
+	public void continueAction(Defense defense, Player blockingPlayer){
+		if(defense != null){
+			playerUI.closeAllOtherPopups();
+			playerUI.checkIfWantToCallBluff(this,(PlayerWithChoices)blockingPlayer,defense); //FIXME other players can call bluff as well?
+		}else{
+			if(--numNeedingToNotBlock <= 0){
+				completeAction();
+			}
+		}
+	}
+	
+
+	public void continueAfterDefenseBluffCall(boolean calledBluffOnDefense, PlayerWithChoices blockingPlayer, Defense defenseAction) {
+		if(!calledBluffOnDefense){
+			defenseAction.defendAgainstPlayer(player);
 			playerUI.advanceToNextPlayer(); //Blocked so we should always go on...
 		}else{
-			action.performAction(player);
-			if(advanceToNextPlayerOnClick){
-				playerUI.advanceToNextPlayer();
+			//TODO let blocking player choose to not show they have the card??
+			if(blockingPlayer.has(defenseAction.cardTypeRequired())){
+				player.revealACard(); //Wrong to call bluff on blocking - so now lose a card
+				defenseAction.defendAgainstPlayer(player);
+				blockingPlayer.replaceCard(action.cardTypeRequired());
+			}else{
+				blockingPlayer.revealACard();
+				action.performAction(player); //Block failed!  Player still gets to do action - FIXME should be before advancing to next player
 			}
+		}
+	}
+
+
+	private void completeAction() {
+		action.performAction(player);
+		if(advanceToNextPlayerOnClick){
+			playerUI.advanceToNextPlayer();
 		}
 		playerUI.updateMoneyLabelText();
 	}
 	
 	public void enableBasedOnAction(){
 		this.setDisable(!action.canPerformAction(player));
+	}
+	
+	int numNeedingToNotCallBluff = 0;
+
+	public void continueAfterBluffCall(boolean bluffCalled, Player bluffCaller) {
+		if(bluffCalled){
+			playerUI.closeAllOtherPopups();
+			//TODO let player choose to not show they have the card
+			if(player.has(action.cardTypeRequired())){
+				bluffCaller.revealACard();
+				action.performAction(player);
+				playerUI.replaceCard(action.cardTypeRequired());
+			}else{
+				player.revealACard();
+			}
+		}else{
+			if(--numNeedingToNotCallBluff <= 0){
+				if(action.defensesThatCanBlock().isEmpty()){ //TODO check to see if there are players who can block??
+					numNeedingToNotBlock = 0;
+					continueAction(null,null);
+				}else{
+					numNeedingToNotBlock = action.targetedPlayers().size();
+					playersWhoCanBlock = new ArrayList<PlayerWithChoices>();
+					for(Player respondingPlayer : action.targetedPlayers()){
+						PlayerWithChoices respondingPlayerWithChoice = (PlayerWithChoices) respondingPlayer;
+						playersWhoCanBlock.add(respondingPlayerWithChoice);
+						respondingPlayerWithChoice.checkIfWantToBlock(ActionButton.this, action.defensesThatCanBlock());
+					}
+				}
+			}
+		}
+		
 	}
 }

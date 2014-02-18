@@ -40,5 +40,10 @@ public class AssassinAction implements Action {
 	public String actionDescription() {
 		return "Assassin: pay 3 coins and make " + playerToAssassinate + " lose influence, blockable by contessa";
 	}
+
+	@Override
+	public List<Defense> defensesThatCanBlock() {
+		return Arrays.asList((Defense)new ContessaDefense());
+	}
 	
 }

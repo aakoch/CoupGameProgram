@@ -3,6 +3,7 @@ package game.actions;
 import game.CardType;
 import game.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class IncomeAction implements Action {
@@ -30,6 +31,11 @@ public class IncomeAction implements Action {
 	@Override
 	public String actionDescription() {
 		return "Income: gain one coin, unblockable";
+	}
+
+	@Override
+	public List<Defense> defensesThatCanBlock() {
+		return new ArrayList<Defense>();
 	}
 
 }

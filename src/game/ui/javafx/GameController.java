@@ -16,9 +16,11 @@ public class GameController {
 		int xPos = 0;
 		int yPos = 0;
 		for(Player player : g.getPlayers()){
-			IndividualPlayer playerUi = new IndividualPlayer(g, (PlayerWithChoices)player, xPos += 100, yPos += 30, this);
+			IndividualPlayer playerUi = new IndividualPlayer(g, (PlayerWithChoices)player, xPos, yPos, this);
 			allPlayerUis.add(playerUi);
 			playerUi.show();
+			xPos += 120;
+			yPos += 50;
 		}
 	}
 	
@@ -65,6 +67,33 @@ public class GameController {
 			allPlayerUis.remove(i);
 		}
 		return allPlayerUis.indexOf(nextPlayer);
+	}
+
+
+
+	public void giveOtherPlayersChanceToCallBluff(PlayerWithChoices playerBeingCalled, ActionButton actionAttempting) {
+		for(IndividualPlayer playerUi : allPlayerUis){
+			if(!playerUi.forPlayer(playerBeingCalled)){
+				playerUi.giveChanceToCallBluff(actionAttempting);
+			}
+		}
+		
+	}
+
+
+
+	public void closeAllOtherPopups(PlayerWithChoices player) {
+		for(IndividualPlayer playerUi : allPlayerUis){
+			if(!playerUi.forPlayer(player)){
+				playerUi.hidePopup();
+			}
+		}
+	}
+
+
+
+	public int getNumberOfRemainingPlayers() {
+		return allPlayerUis.size();
 	}
 
 }

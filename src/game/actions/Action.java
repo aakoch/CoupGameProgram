@@ -11,6 +11,7 @@ public interface Action {
 	public void performAction(Player player);
 	public List<Player> targetedPlayers(); //FIXME Change to players who can block?
 	public CardType cardTypeRequired();
+	public List<Defense> defensesThatCanBlock();
 	public boolean canPerformAction(Player player); //TODO test this??
 	public String actionDescription();
 }

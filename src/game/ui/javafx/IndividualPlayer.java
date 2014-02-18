@@ -1,6 +1,7 @@
 package game.ui.javafx;
 
 import game.Card;
+import game.CardType;
 import game.Game;
 import game.Player;
 import game.actions.Action;
@@ -8,6 +9,7 @@ import game.actions.ActionList;
 import game.actions.AmbassadorAction;
 import game.actions.AssassinAction;
 import game.actions.CoupAction;
+import game.actions.Defense;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +24,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
+import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 public class IndividualPlayer extends Stage{
@@ -39,9 +42,11 @@ public class IndividualPlayer extends Stage{
 	private Button card1RevealButton;
 	private Button card2RevealButton;
 	private Color color;
+	private Game game;
 
 	public IndividualPlayer(final Game game, final PlayerWithChoices player, int xLoc, int yLoc, final GameController gameController){
 		super();
+		this.game = game;
 		
 		//TODO figure out how to make not closable
 		
@@ -140,7 +145,7 @@ public class IndividualPlayer extends Stage{
 	}
 	
 	private int randomColorVal(){
-		return (int) (Math.random() * 255);
+		return 100 + (int) (Math.random() * 155);
 	}
 	
 	public void giveThisPlayerTheirTurn(){
@@ -208,6 +213,140 @@ public class IndividualPlayer extends Stage{
 	
 	public String getPlayerName(){
 		return player.toString();
+	}
+
+	public void giveOtherPlayersChanceToCallBluff(ActionButton actionAttempting) {
+		gameController.giveOtherPlayersChanceToCallBluff(player, actionAttempting);
+	}
+
+	public boolean forPlayer(PlayerWithChoices playerBeingCalled) {
+		return player.equals(playerBeingCalled);
+	}
+	
+	private Popup popup;
+
+	public void giveChanceToCallBluff(final ActionButton actionAttempting) {
+		popup = new Popup();
+		popup.setX(getX());
+		popup.setY(getY());
+		popup.show(this);
+		
+		Pane popupPane = new Pane();
+		popup.getContent().add(popupPane);
+		
+		Button callBluffButton = new Button("Click to accuse " + actionAttempting.getPlayerName() 
+				+ " of bluffing about having " + actionAttempting.getRequiredCard());
+		callBluffButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				popup.hide();
+				actionAttempting.continueAfterBluffCall(true,player);
+			}
+		});
+		callBluffButton.setLayoutY(20);
+		popupPane.getChildren().add(callBluffButton);
+		
+		Button doNotCallButton = new Button("Click to NOT accuse " + actionAttempting.getPlayerName() 
+				+ " of bluffing about having " + actionAttempting.getRequiredCard());
+		doNotCallButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				popup.hide();
+				actionAttempting.continueAfterBluffCall(false,player);
+			}
+		});
+		doNotCallButton.setLayoutY(50);
+		popupPane.getChildren().add(doNotCallButton);
+	}
+	
+	public void checkIfWantToBlock(final ActionButton actionToBlock, List<Defense> possibleDefenses) {
+		popup = new Popup();
+		popup.setX(getX());
+		popup.setY(getY());
+		popup.show(this);
+		
+		Pane popupPane = new Pane();
+		popup.getContent().add(popupPane);
+		int yLoc = 20;
+		for(final Defense defense : possibleDefenses){
+			Button blockButton = new Button("Click to block " + actionToBlock.getActionName() + " with " + defense.cardTypeRequired());
+			blockButton.setOnMouseClicked(new EventHandler<Event>(){
+				@Override
+				public void handle(Event arg0) {
+					popup.hide();
+					actionToBlock.continueAction(defense,player);
+				}
+			});
+			blockButton.setLayoutY(yLoc);
+			yLoc += 30;
+			popupPane.getChildren().add(blockButton);
+		}
+		
+		Button doNotBlockButton = new Button("Click to NOT block " + actionToBlock.getActionName());
+		doNotBlockButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				popup.hide();
+				actionToBlock.continueAction(null,null);
+			}
+		});
+		doNotBlockButton.setLayoutY(yLoc);
+		popupPane.getChildren().add(doNotBlockButton);
+	}
+
+	public void hidePopup() {
+		if(popup != null){
+			popup.hide();
+		}
+	}
+
+	public void closeAllOtherPopups() {
+		gameController.closeAllOtherPopups(player);
+	}
+
+	public void replaceCard(CardType cardTypeRequired) {
+		game.reshuffleCardAndDrawNewCard(player, cardTypeRequired);
+		updateCardLabels();
+	}
+
+	public int getNumberOfOtherPlayers() {
+		return gameController.getNumberOfRemainingPlayers() - 1;
+	}
+
+	public void checkIfWantToCallBluff(final ActionButton actionAttempting, 
+			final PlayerWithChoices blockingPlayer, final Defense defenseUsing) {
+		// TODO Auto-generated method stub
+		popup = new Popup();
+		popup.setX(getX());
+		popup.setY(getY());
+		popup.show(this);
+		
+		Pane popupPane = new Pane();
+		popup.getContent().add(popupPane);
+		
+		Button callBluffButton = new Button("Click to accuse " + blockingPlayer 
+				+ " of bluffing about having " + defenseUsing.cardTypeRequired());
+		callBluffButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				popup.hide();
+				actionAttempting.continueAfterDefenseBluffCall(true,blockingPlayer,defenseUsing);
+			}
+		});
+		callBluffButton.setLayoutY(20);
+		popupPane.getChildren().add(callBluffButton);
+		
+		Button doNotCallButton = new Button("Click to NOT accuse " + blockingPlayer 
+				+ " of bluffing about having " + defenseUsing.cardTypeRequired());
+		doNotCallButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				popup.hide();
+				actionAttempting.continueAfterDefenseBluffCall(false,blockingPlayer,defenseUsing);
+			}
+		});
+		doNotCallButton.setLayoutY(50);
+		popupPane.getChildren().add(doNotCallButton);
 	}
 	
 }

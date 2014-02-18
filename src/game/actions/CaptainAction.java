@@ -26,8 +26,7 @@ public class CaptainAction implements Action {
 
 	@Override
 	public CardType cardTypeRequired() {
-		// TODO Auto-generated method stub
-		return null;
+		return CardType.captain;
 	}
 
 	@Override
@@ -38,6 +37,11 @@ public class CaptainAction implements Action {
 	@Override
 	public String actionDescription() {
 		return "Captain: steal two coins from " + playerFromWhomToSteal + ", blockable by captain and ambassador";
+	}
+
+	@Override
+	public List<Defense> defensesThatCanBlock() {
+		return Arrays.asList(new CaptainDefense(), new AmbassadorDefense());
 	}
 	
 }

@@ -3,6 +3,7 @@ package game.actions;
 import game.CardType;
 import game.Player;
 
+import java.util.ArrayList;
 import java.util.List;
 
 public class DukeAction implements Action {
@@ -30,6 +31,11 @@ public class DukeAction implements Action {
 	@Override
 	public String actionDescription() {
 		return "Duke: gain three coins, unblockable";
+	}
+
+	@Override
+	public List<Defense> defensesThatCanBlock() {
+		return new ArrayList<Defense>();
 	}
 	
 	

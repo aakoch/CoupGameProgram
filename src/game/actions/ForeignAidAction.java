@@ -4,6 +4,7 @@ import game.CardType;
 import game.Player;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ForeignAidAction implements Action {
@@ -38,6 +39,11 @@ public class ForeignAidAction implements Action {
 	@Override
 	public String actionDescription() {
 		return "Foreign Aid: gain two coins, blockable by duke";
+	}
+
+	@Override
+	public List<Defense> defensesThatCanBlock() {
+		return Arrays.asList((Defense)new DukeDefense());
 	}
 
 }
