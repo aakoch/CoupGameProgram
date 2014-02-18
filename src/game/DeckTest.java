@@ -87,8 +87,9 @@ public class DeckTest {
 		if(dealtCard.getType().equals(anotherDealt.getType())){
 			deckIsRandomizedOnCreation(); //Resursively call until they are different
 		}
-		
-		assertNotSame(dealtCard.getType(),anotherDealt.getType());
+		else{
+			assertNotSame(dealtCard.getType(),anotherDealt.getType());
+		}
 	}
 
 }

@@ -2,8 +2,8 @@ package game;
 
 public class CardPair {
 
-	private final Card card;
-	private final Card card2;
+	private Card card;
+	private Card card2;
 
 	public CardPair(Card card, Card card2) {
 		this.card = card;
@@ -17,5 +17,18 @@ public class CardPair {
 	public Card getSecondCard() {
 		return card2;
 	}
+	
+	public void setFirstCard(Card card){
+		this.card = card;
+	}
+	
+	public void setSecondCard(Card card2){
+		this.card2 = card2;
+	}
+	
+	public boolean has(CardType cardType) {
+		return card.getType() == cardType || card2.getType() == cardType;
+	}
+	
 
 }

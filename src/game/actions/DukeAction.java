@@ -24,7 +24,7 @@ public class DukeAction implements Action {
 
 	@Override
 	public boolean canPerformAction(Player player) {
-		return true;
+		return player.getCoins() < 10;
 	}
 
 	@Override

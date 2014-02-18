@@ -10,14 +10,23 @@ public class ActionList {
 	
 	private List<Action> allActions = new ArrayList<Action>();
 	
-	public ActionList(Game game, Player player){
+	public ActionList(Game game, Player player, CardChooser cardChooser){
+		List<Player> otherPlayers = new ArrayList<Player>(game.getPlayers());
+		otherPlayers.remove(player);
+		
 		allActions.add(new IncomeAction());
 		allActions.add(new ForeignAidAction(player, game.getPlayers()));
-		allActions.add(new CoupAction(null));
-		allActions.add(new AmbassadorAction(game, null));
-		//FIXME how to have user decide who to target?s
-		allActions.add(new AssassinAction(null));
-		allActions.add(new CaptainAction(null));
+		
+		for(Player otherPlayer : otherPlayers){
+			allActions.add(new CoupAction(otherPlayer));
+		}
+		allActions.add(new AmbassadorAction(game, cardChooser));
+		for(Player otherPlayer : otherPlayers){
+			allActions.add(new AssassinAction(otherPlayer));
+		}
+		for(Player otherPlayer : otherPlayers){
+			allActions.add(new CaptainAction(otherPlayer));
+		}
 		allActions.add(new DukeAction());
 	}
 	

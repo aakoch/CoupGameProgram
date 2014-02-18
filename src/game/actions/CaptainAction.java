@@ -32,12 +32,12 @@ public class CaptainAction implements Action {
 
 	@Override
 	public boolean canPerformAction(Player player) {
-		return true;
+		return player.getCoins() < 10  && !playerFromWhomToSteal.eliminated();
 	}
 
 	@Override
 	public String actionDescription() {
-		return "Captain: choose player from whom to steal two coins, blockable by captain and ambassador";
+		return "Captain: steal two coins from " + playerFromWhomToSteal + ", blockable by captain and ambassador";
 	}
 	
 }

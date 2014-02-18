@@ -13,6 +13,11 @@ public class Game {
 	private Deck deck = new Deck();
 	private final int numPlayers;
 	private final List<Player> players;
+	
+	public Game(List<Player> players) {
+		this.players = players;
+		this.numPlayers = players.size();
+	}
 
 	public Game(int numPlayers) {
 		players = new ArrayList<Player>();
@@ -56,9 +61,15 @@ public class Game {
 	private List<Card> currentAmbassadorCardChoices;
 	private ActionChooser actionChooser;
 
+	//NOTE:  Player can choose # cards returned - 2
 	public List<Card> playerCanChooseFromTheseCardsAsAmbassador(Player player) {
 		List<Card> cardChoices = new ArrayList<Card>();
-		cardChoices.addAll(player.getCards());
+		if(!player.getFirstCard().isRevealed()){
+			cardChoices.add(player.getFirstCard());
+		}
+		if(!player.getSecondCard().isRevealed()){
+			cardChoices.add(player.getSecondCard());
+		}
 		for(int i = 0; i < 2; i++){
 			cardChoices.add(deck.deal());
 		}
@@ -76,6 +87,17 @@ public class Game {
 			}
 		}
 		
+	}
+	
+
+	public void playerChoosesTheseCardsAsAmbassador(Player player,
+			CardPair chosenCards) {
+		player.setCards(chosenCards);
+		for(Card choice : currentAmbassadorCardChoices){
+			if(!choice.equals(chosenCards.getFirstCard()) && !choice.equals(chosenCards.getSecondCard())){
+				deck.takeCardBack(choice);
+			}
+		}
 	}
 
 	public boolean isPlayerRightAboutOtherPlayerNotHavingCard(int accusingPlayerNumber, int accussedPlayerNumber,
@@ -197,5 +219,6 @@ public class Game {
 	public void setBluffCallerOption(BluffCallerOption bluffCallerOption) {
 		this.bluffCallerOption = bluffCallerOption;
 	}
+
 
 }

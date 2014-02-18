@@ -27,5 +27,10 @@ public class Card {
 	public void hide() {
 		revealed = false;
 	}
+	
+	@Override
+	public String toString(){
+		return type.toString();
+	}
 
 }

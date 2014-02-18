@@ -4,30 +4,46 @@ import java.util.Arrays;
 import java.util.List;
 
 public class Player {
-
-	private Card card;
-	private Card secondCard;
+	
+	private static int playerNumber = 1;
+	
+	private String name;
+	
+	private CardPair cardPair = new CardPair(null, null);
 
 	private int money = 2;
 	
+	public Player(){
+		this("Player " + (playerNumber++));
+	}
+	
+	public Player(String name){
+		this.name = name;
+	}
+	
+	//FIXME change to return CardPair instead of List<Card>??
 	public List<Card> getCards() {
-		return Arrays.asList(card,secondCard);
+		return Arrays.asList(this.cardPair.getFirstCard(),this.cardPair.getSecondCard());
+	}
+	
+	public void setCards(CardPair pair){
+		this.cardPair = pair;
 	}
 
 	public void receive(Card card) {
-		if(this.card == null){
-			this.card = card;
+		if(this.cardPair.getFirstCard() == null){
+			this.cardPair.setFirstCard(card);
 		}else{
-			this.secondCard = card;
+			this.cardPair.setSecondCard(card);
 		}
 	}
 
 	public Card getFirstCard() {
-		return card;
+		return cardPair.getFirstCard();
 	}
 
 	public Card getSecondCard() {
-		return secondCard;
+		return cardPair.getSecondCard();
 	}
 
 	public int getCoins() {
@@ -74,15 +90,15 @@ public class Player {
 	}
 
 	public void replaceFirstCard(Card card) {
-		this.card = card;
+		this.cardPair.setFirstCard(card);
 	}
 
 	public void replaceSecondCard(Card card) {
-		this.secondCard = card;
+		this.cardPair.setSecondCard(card);
 	}
 
 	public boolean has(CardType cardType) {
-		return card.getType() == cardType || secondCard.getType() == cardType;
+		return this.cardPair.has(cardType);
 	}
 	
 	//FIXME give player an option...
@@ -91,6 +107,15 @@ public class Player {
 			getFirstCard().reveal();
 		}
 		getSecondCard().reveal();
+	}
+	
+	public boolean eliminated(){
+		return getFirstCard().isRevealed() && getSecondCard().isRevealed();
+	}
+	
+	@Override
+	public String toString(){
+		return name;
 	}
 
 }

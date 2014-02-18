@@ -468,6 +468,8 @@ public class GameIntegrationTest {
 			Mockito.when(defenseChooser.chooseDefense(game.getPlayer(1))).thenReturn(new DukeDefense());
 			Mockito.when(bluffCallerOption.callBluff(game.getPlayer(0), game.getPlayer(1), CardType.duke)).thenReturn(true);
 			
+			Card originalCard = game.getPlayer(1).getFirstCard();
+			
 			game.oneTurn();
 			
 			assertThat(game.getPlayer(0).getCoins(),equalTo(2)); //First player does not get foreign aid!
@@ -477,7 +479,7 @@ public class GameIntegrationTest {
 			//Player 0 loses a card since they were wrong
 			assertNotSame(game.getPlayers().get(0).getCards().get(0).isRevealed(),game.getPlayers().get(0).getCards().get(1).isRevealed());
 			
-			assertNotSame(game.getPlayer(1).getFirstCard().getType(), CardType.duke); //Player 1 got different card
+			assertNotSame(game.getPlayer(1).getFirstCard(), originalCard); //Player 1 got different card
 			//But player 1 still does not have any cards revealed:
 			assertSame(game.getPlayers().get(1).getCards().get(0).isRevealed(),false);
 			assertSame(game.getPlayers().get(1).getCards().get(0).isRevealed(),game.getPlayers().get(1).getCards().get(1).isRevealed());
@@ -491,7 +493,41 @@ public class GameIntegrationTest {
 	}	
 	//TODO Need mapping from actions to possible defenses -- only offer those options
 	
-	//TODO Test calling bluffs - can call action OR defense
-	
+	@Test
+	public void firstPlayerChoosesActionAmbassador_CannotReplaceRevealedCard() throws Exception {
+		final List<Card> cardsPlayerHadBefore = new ArrayList<Card>(game.getPlayer(0).getCards());
+		
+		game.getPlayer(0).getFirstCard().reveal(); //Now the first card is revealed... it should still be in the player's hand
+		
+		CardChooser cardChooser = Mockito.mock(CardChooser.class);
+		Mockito.when(cardChooser.chooseCards(Mockito.anyList(), Mockito.eq(game.getPlayer(0)), 
+				Mockito.eq(game.getPlayer(0).getFirstCard()))).thenAnswer(
+				new Answer<CardPair>(){
+
+					@Override
+					public CardPair answer(InvocationOnMock invocation)
+							throws Throwable {
+						List<Card> cardChoices = (List<Card>) invocation.getArguments()[0];
+						cardChoices.removeAll(cardsPlayerHadBefore);
+						//Trade in for cards player did NOT have
+						return new CardPair((Card) invocation.getArguments()[2],cardChoices.get(0));
+					}
+					
+				});
+		Mockito.when(actionChooser.chooseAction(game.getPlayer(0))).thenReturn(new AmbassadorAction(game, cardChooser));
+		
+		game.oneTurn();
+		
+		assertThat(game.getPlayer(0).getCoins(),equalTo(2));
+		assertThat(game.getPlayer(1).getCoins(),equalTo(2));
+		assertThat(game.getPlayer(2).getCoins(),equalTo(2));
+		
+		List<Card> cardsPlayerHasNow = new ArrayList<Card>(game.getPlayer(0).getCards());
+		cardsPlayerHasNow.removeAll(cardsPlayerHadBefore);
+		assertThat(cardsPlayerHasNow.size(),equalTo(1)); //Cards player has now should contain one of the cards he previously had
+		//One of the cards should be revealed (the one we had before, but I'm not testing that)
+		assertNotSame(game.getPlayer(0).getFirstCard().isRevealed(),game.getPlayer(0).getSecondCard().isRevealed());
+		
+	}
 	
 }

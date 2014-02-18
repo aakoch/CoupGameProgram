@@ -19,12 +19,21 @@ public class AmbassadorAction implements Action {
 				this.cardChooser = cardChooser;
 	}
 
+	//FIXME Clean this up!
 	@Override
 	public void performAction(Player player) {
-		// TODO Auto-generated method stub
 		List<Card> playerCanChooseFromTheseCardsAsAmbassador = this.game.playerCanChooseFromTheseCardsAsAmbassador(player);
-		CardPair chooseCards = this.cardChooser.chooseCards(playerCanChooseFromTheseCardsAsAmbassador, player);
-		game.playerChoosesTheseCardsAsAmbassador(player, chooseCards.getFirstCard(), chooseCards.getSecondCard());
+		CardPair chosenCards = null;
+		if(playerCanChooseFromTheseCardsAsAmbassador.size() == 4){
+			chosenCards = this.cardChooser.chooseCards(playerCanChooseFromTheseCardsAsAmbassador, player);
+		}else{
+			if(playerCanChooseFromTheseCardsAsAmbassador.contains(player.getFirstCard())){
+				chosenCards = this.cardChooser.chooseCards(playerCanChooseFromTheseCardsAsAmbassador, player, player.getSecondCard());
+			}else{
+				chosenCards = this.cardChooser.chooseCards(playerCanChooseFromTheseCardsAsAmbassador, player, player.getFirstCard());
+			}
+		}
+		game.playerChoosesTheseCardsAsAmbassador(player, chosenCards);
 	}
 
 	@Override
@@ -39,7 +48,7 @@ public class AmbassadorAction implements Action {
 
 	@Override
 	public boolean canPerformAction(Player player) {
-		return true;
+		return player.getCoins() < 10;
 	}
 
 	@Override

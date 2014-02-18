@@ -33,12 +33,12 @@ public class AssassinAction implements Action {
 
 	@Override
 	public boolean canPerformAction(Player player) {
-		return player.getCoins() >= 3;
+		return player.getCoins() >= 3 && player.getCoins() < 10 && !playerToAssassinate.eliminated();
 	}
 
 	@Override
 	public String actionDescription() {
-		return "Assassin: pay 3 coins and choose player to lose influence, blockable by contessa";
+		return "Assassin: pay 3 coins and make " + playerToAssassinate + " lose influence, blockable by contessa";
 	}
 	
 }

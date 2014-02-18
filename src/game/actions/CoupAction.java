@@ -31,14 +31,14 @@ public class CoupAction implements Action {
 		return null;
 	}
 
-	@Override //FIXME Need to have other actions not performable if have 10 or more coins
+	@Override
 	public boolean canPerformAction(Player player) {
-		return player.getCoins() >= 7;
+		return player.getCoins() >= 7 && !playerToBeCouped.eliminated();
 	}
 
 	@Override
 	public String actionDescription() {
-		return "Coup: pay 7 coins and choose player to lose influence, unblockable";
+		return "Coup: pay 7 coins make " + playerToBeCouped + " lose influence, unblockable";
 	}
 	
 }
