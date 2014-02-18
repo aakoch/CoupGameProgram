@@ -24,15 +24,7 @@ public class PlayerWithChoices extends Player {
 	
 	@Override
 	public void revealACard(){
-		if(getFirstCard().isRevealed()){
-			getSecondCard().reveal();
-			playerUi.advanceToNextPlayer();
-		}else if(getSecondCard().isRevealed()){
-			getFirstCard().reveal();
-			playerUi.advanceToNextPlayer();
-		}else{
-			this.playerUi.forceToReveal();
-		}
+		this.revealACard(true);
 	}
 
 	public void checkIfWantToBlock(final ActionButton actionToBlock, List<Defense> possibleDefenses) {
@@ -45,5 +37,21 @@ public class PlayerWithChoices extends Player {
 
 	public void replaceCard(CardType cardTypeRequired) {
 		playerUi.replaceCard(cardTypeRequired);
+	}
+
+	public void revealACard(boolean advanceToNextPlayer) {
+		if(getFirstCard().isRevealed()){
+			getSecondCard().reveal();
+			if(advanceToNextPlayer){
+				playerUi.advanceToNextPlayer();
+			}
+		}else if(getSecondCard().isRevealed()){
+			getFirstCard().reveal();
+			if(advanceToNextPlayer){
+				playerUi.advanceToNextPlayer();
+			}
+		}else{
+			this.playerUi.forceToReveal(advanceToNextPlayer);
+		}
 	}
 }

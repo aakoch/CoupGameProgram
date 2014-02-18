@@ -3,6 +3,8 @@ package game.ui.javafx;
 import game.CardType;
 import game.Player;
 import game.actions.Action;
+import game.actions.AssassinAction;
+import game.actions.ContessaDefense;
 import game.actions.Defense;
 
 import java.util.ArrayList;
@@ -85,8 +87,16 @@ public class ActionButton extends Button {
 				defenseAction.defendAgainstPlayer(player);
 				blockingPlayer.replaceCard(action.cardTypeRequired());
 			}else{
-				blockingPlayer.revealACard();
-				action.performAction(player); //Block failed!  Player still gets to do action - FIXME should be before advancing to next player
+				//Need special case for if failed bluffer also target of assassin... - this person is eliminated now!
+				if(defenseAction instanceof ContessaDefense){
+					blockingPlayer.getFirstCard().reveal();
+					blockingPlayer.getSecondCard().reveal();
+					playerUI.advanceToNextPlayer();
+				}
+				else{
+					blockingPlayer.revealACard(false);
+					completeAction(); //Block failed!  Player still gets to do action - FIXME should be before advancing to next player
+				}
 			}
 		}
 	}
@@ -106,14 +116,21 @@ public class ActionButton extends Button {
 	
 	int numNeedingToNotCallBluff = 0;
 
-	public void continueAfterBluffCall(boolean bluffCalled, Player bluffCaller) {
+	public void continueAfterBluffCall(boolean bluffCalled, PlayerWithChoices bluffCaller) {
 		if(bluffCalled){
 			playerUI.closeAllOtherPopups();
 			//TODO let player choose to not show they have the card
 			if(player.has(action.cardTypeRequired())){
-				bluffCaller.revealACard();
-				action.performAction(player);
 				playerUI.replaceCard(action.cardTypeRequired());
+				//Need special case for if bluff caller is also target of assassin... - this person is eliminated now!
+				if(action instanceof AssassinAction && action.targetedPlayers().get(0).equals(bluffCaller)){
+					bluffCaller.getFirstCard().reveal();
+					bluffCaller.getSecondCard().reveal();
+					playerUI.advanceToNextPlayer();
+				}else{
+					bluffCaller.revealACard(false);
+					completeAction();
+				}
 			}else{
 				player.revealACard();
 			}

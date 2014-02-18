@@ -43,6 +43,7 @@ public class IndividualPlayer extends Stage{
 	private Button card2RevealButton;
 	private Color color;
 	private Game game;
+	private boolean advanceAfterChoosing = true;
 
 	public IndividualPlayer(final Game game, final PlayerWithChoices player, int xLoc, int yLoc, final GameController gameController){
 		super();
@@ -83,10 +84,9 @@ public class IndividualPlayer extends Stage{
 			@Override
 			public void handle(Event arg0) {
 				player.getFirstCard().reveal();
-				card1RevealButton.setVisible(false);
-				card2RevealButton.setVisible(false);
-				gameController.advanceToNextPlayer();
+				updateFollowingCardReveal(gameController);
 			}
+
 		});
 		pane.getChildren().add(card1RevealButton);
 		
@@ -102,9 +102,7 @@ public class IndividualPlayer extends Stage{
 			@Override
 			public void handle(Event arg0) {
 				player.getSecondCard().reveal();
-				card1RevealButton.setVisible(false);
-				card2RevealButton.setVisible(false);
-				gameController.advanceToNextPlayer();
+				updateFollowingCardReveal(gameController);
 			}
 		});
 		card2RevealButton.setVisible(false);
@@ -136,6 +134,16 @@ public class IndividualPlayer extends Stage{
         setScene(scene);
 	}
 
+	private void updateFollowingCardReveal(
+			final GameController gameController) {
+		card1RevealButton.setVisible(false);
+		card2RevealButton.setVisible(false);
+		updateCardLabels();
+		if(advanceAfterChoosing){
+			gameController.advanceToNextPlayer();
+		}
+	}
+	
 	private String getCardDisplay(Card card) {
 		return "Card " + card.getType() + " is " + (card.isRevealed() ? "" : "NOT ") + "reveald";
 	}
@@ -199,12 +207,16 @@ public class IndividualPlayer extends Stage{
 		loserText.setFill(Color.WHITE);
 		pane.getChildren().add(loserText );
 	}
-
-	public void forceToReveal() {
+	
+	public void forceToReveal(boolean advanceAfterChoosing) {
 		this.toFront();
+		this.advanceAfterChoosing = advanceAfterChoosing;
 		card1RevealButton.setVisible(true);
 		card2RevealButton.setVisible(true);
-		
+	}
+
+	public void forceToReveal() {
+		this.forceToReveal(true);
 	}
 
 	public Paint getColor() {
