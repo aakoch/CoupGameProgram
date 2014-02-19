@@ -85,7 +85,7 @@ public class ActionButton extends Button {
 			if(blockingPlayer.has(defenseAction.cardTypeRequired())){
 				player.revealACard(); //Wrong to call bluff on blocking - so now lose a card
 				defenseAction.defendAgainstPlayer(player);
-				blockingPlayer.replaceCard(action.cardTypeRequired());
+				blockingPlayer.replaceCard(defenseAction.cardTypeRequired());
 			}else{
 				//Need special case for if failed bluffer also target of assassin... - this person is eliminated now!
 				if(defenseAction instanceof ContessaDefense){
@@ -143,6 +143,7 @@ public class ActionButton extends Button {
 					numNeedingToNotBlock = action.targetedPlayers().size();
 					playersWhoCanBlock = new ArrayList<PlayerWithChoices>();
 					for(Player respondingPlayer : action.targetedPlayers()){
+						if(respondingPlayer.eliminated()) continue; //Eliminated player can't still block foreign aid
 						PlayerWithChoices respondingPlayerWithChoice = (PlayerWithChoices) respondingPlayer;
 						playersWhoCanBlock.add(respondingPlayerWithChoice);
 						respondingPlayerWithChoice.checkIfWantToBlock(ActionButton.this, action.defensesThatCanBlock());

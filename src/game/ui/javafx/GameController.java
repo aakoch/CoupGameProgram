@@ -11,6 +11,7 @@ public class GameController {
     
     private final List<IndividualPlayer> allPlayerUis = new ArrayList<IndividualPlayer>();
     private int curPlayer = -1;
+	private CommonKnowledgeUI commonUI;
 
 	public GameController(Game g) {
 		int xPos = 0;
@@ -22,11 +23,13 @@ public class GameController {
 			xPos += 120;
 			yPos += 50;
 		}
+		commonUI = new CommonKnowledgeUI(g);
 	}
 	
 
     
 	public void advanceToNextPlayer() {
+		commonUI.refresh();
 		List<Integer> uisIdsToRemove = new ArrayList<Integer>();
 		for(int i = 0; i < allPlayerUis.size(); i++){
 			IndividualPlayer playerUi = allPlayerUis.get(i);
@@ -38,7 +41,7 @@ public class GameController {
 			}
 		}
 		
-		curPlayer = getNextPlayerUi(curPlayer, allPlayerUis, uisIdsToRemove);
+		curPlayer = getNextPlayerUi(curPlayer, uisIdsToRemove);
 		IndividualPlayer nextPlayerUi = allPlayerUis.get(curPlayer);
 		if(allPlayerUis.size() == 1){
 			nextPlayerUi.updateToDisplayerVictory();
@@ -56,7 +59,7 @@ public class GameController {
 	 * @param playersToRemove indices of players to remove
 	 * @return index of player who should go next
 	 */
-	public static int getNextPlayerUi(int curPlayer, List<IndividualPlayer> allPlayerUis, List<Integer> playersToRemove) {
+	public int getNextPlayerUi(int curPlayer, List<Integer> playersToRemove) {
 		curPlayer = (curPlayer + 1) % allPlayerUis.size();
 		while(playersToRemove.contains(curPlayer)){ //FIXME should NEVER ask to eliminate all of them!
 			curPlayer = (curPlayer + 1) % allPlayerUis.size();
