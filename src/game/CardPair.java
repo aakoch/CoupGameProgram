@@ -1,6 +1,8 @@
 package game;
 
-public class CardPair {
+import java.io.Serializable;
+
+public class CardPair implements Serializable {
 
 	private Card card;
 	private Card card2;

@@ -6,6 +6,7 @@ import game.Player;
 import java.util.ArrayList;
 import java.util.List;
 
+//TODO Implement version to use in client/server model
 public class GameController {
 	
     
@@ -23,12 +24,14 @@ public class GameController {
 			xPos += 120;
 			yPos += 50;
 		}
-		commonUI = new CommonKnowledgeUI(g);
+		commonUI = new CommonKnowledgeUI(g.getPlayers());
 	}
 	
-
-    
-	public void advanceToNextPlayer() {
+	public IndividualPlayer playerNumber(int i){
+		return allPlayerUis.get(i);
+	}
+	
+	public IndividualPlayer advanceToNextPlayer() {
 		commonUI.refresh();
 		List<Integer> uisIdsToRemove = new ArrayList<Integer>();
 		for(int i = 0; i < allPlayerUis.size(); i++){
@@ -49,6 +52,7 @@ public class GameController {
 			nextPlayerUi.giveThisPlayerTheirTurn();
 			nextPlayerUi.toFront();
 		}
+		return nextPlayerUi;
 		
 	}
 

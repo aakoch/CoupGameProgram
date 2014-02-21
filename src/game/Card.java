@@ -1,6 +1,8 @@
 package game;
 
-public class Card {
+import java.io.Serializable;
+
+public class Card implements Serializable {
 
 	private boolean revealed = false;
 	private final CardType type;

@@ -14,13 +14,13 @@ public class CommonKnowledgeUI extends Stage {
 
 	private List<ExposedPlayerInfo> exposedPlayerUIs = new ArrayList<ExposedPlayerInfo>();
 	
-	public CommonKnowledgeUI(Game g){
+	public CommonKnowledgeUI(List<Player> allPlayers){
 		
 		AnchorPane root = new AnchorPane();
 		
 		int xLoc = 10;
 		int yLoc = 0;
-		for(Player player : g.getPlayers()){
+		for(Player player : allPlayers){
 			ExposedPlayerInfo playerInfoUI = new ExposedPlayerInfo(player);
 			exposedPlayerUIs.add(playerInfoUI);
 			playerInfoUI.setLayoutX(xLoc);
@@ -33,7 +33,7 @@ public class CommonKnowledgeUI extends Stage {
 			root.getChildren().add(playerInfoUI);
 		}
 		
-		Scene scene = new Scene(root, 500, 150 * ((g.getPlayers().size() + 1) / 2));
+		Scene scene = new Scene(root, 500, 150 * ((allPlayers.size() + 1) / 2));
         this.setTitle("Common Knowledge");
         this.setResizable(true);
         this.setScene(scene);

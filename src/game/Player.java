@@ -1,9 +1,10 @@
 package game;
 
+import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
 
-public class Player {
+public class Player implements Serializable {
 	
 	private static int playerNumber = 1;
 	
