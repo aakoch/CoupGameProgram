@@ -19,7 +19,7 @@ import javafx.application.Application;
 public class CoupClient {
 
 	public static void main(String[] args){
-		String hostName = "10.0.0.142";
+		String hostName = "192.168.1.133";
 		int portNumber = Integer.parseInt(args[0]);
         try {
         	Socket coupSocket = new Socket(hostName, portNumber);

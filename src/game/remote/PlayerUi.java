@@ -10,6 +10,7 @@ import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import javafx.event.Event;
 import javafx.event.EventHandler;
@@ -75,8 +76,8 @@ public class PlayerUi extends Stage{
 			@Override
 			public void handle(Event arg0) {
 				player.getFirstCard().reveal();
-				//TODO Need to send back to server
-//				updateFollowingCardReveal(gameController);
+				printToServer.println(Responses.FirstCard);
+				updateFollowingCardReveal();
 			}
 
 		});
@@ -94,8 +95,8 @@ public class PlayerUi extends Stage{
 			@Override
 			public void handle(Event arg0) {
 				player.getSecondCard().reveal();
-				//TODO Need to send back to server
-//				updateFollowingCardReveal(gameController);
+				printToServer.println(Responses.SecondCard);
+				updateFollowingCardReveal();
 			}
 		});
 		card2RevealButton.setVisible(false);
@@ -133,16 +134,13 @@ public class PlayerUi extends Stage{
         setScene(scene);
         this.show();
 	}
-//
-//	private void updateFollowingCardReveal(
-//			final GameController gameController) {
-//		card1RevealButton.setVisible(false);
-//		card2RevealButton.setVisible(false);
-//		updateCardLabels();
-//		if(advanceAfterChoosing){
-//			gameController.advanceToNextPlayer();
-//		}
-//	}
+
+	private void updateFollowingCardReveal() {
+		card1RevealButton.setVisible(false);
+		card2RevealButton.setVisible(false);
+		updateCardLabels();
+		CoupApplicationClientSide.processNextServerMessage();
+	}
 	
 	private String getCardDisplay(Card card) {
 		return "Card " + card.getType() + " is " + (card.isRevealed() ? "" : "NOT ") + "reveald";
@@ -169,10 +167,9 @@ public class PlayerUi extends Stage{
 		CoupApplicationClientSide.processNextServerMessage(); //Wait for next command
 	}
 	
-	//FIXME eventually will need to enable/disable based on usefulness
-	public void enableAllActions() {
+	public void enableActions(Set<String> buttonsToEnable) {
 		for(Button actionButton : allActionButtons){
-			actionButton.setDisable(false);
+			actionButton.setDisable(!buttonsToEnable.contains(actionButton.getText()));
 		}
 	}
 
@@ -312,5 +309,6 @@ public class PlayerUi extends Stage{
 		doNotCallButton.setLayoutY(50);
 		popupPane.getChildren().add(doNotCallButton);
 	}
+
 	
 }

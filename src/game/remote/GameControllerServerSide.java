@@ -10,31 +10,26 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 //TODO Implement version to use in client/server model
 public class GameControllerServerSide {
 	
-    
+    private final Game game;
     private final List<Player> players;
     private final List<PrintWriter> outWriters;
     private int curPlayer = -1;
 	
-	List<Map<String,Action>> playerNameToActionMap = new ArrayList<Map<String,Action>>();
+	List<Map<String,Action>> playerActionMaps = new ArrayList<Map<String,Action>>();
 
 	public GameControllerServerSide(Game g, List<PrintWriter> outWriters) {
+		this.game = g;
 		this.outWriters = outWriters;
-		//		int xPos = 0;
-//		int yPos = 0;
-//		for(Player player : g.getPlayers()){
-//			IndividualPlayer playerUi = new IndividualPlayer(g, (PlayerWithChoices)player, xPos, yPos, this);
-//			allPlayerUis.add(playerUi);
-//			playerUi.show();
-//		}
-//		commonUI = new CommonKnowledgeUI(g);
 		players = g.getPlayers();
 		String allPlayerReps = "";
 		for(int i = 0; i < g.getPlayers().size(); i++){
-			Player player = g.getPlayers().get(i);
+			RemotePlayer player = (RemotePlayer) g.getPlayers().get(i);
+			player.setGameController(this);
 			allPlayerReps += (player+":"+player.getFirstCard()+":"+player.getSecondCard()) + ":";
 		}
 		for(int i = 0; i < g.getPlayers().size(); i++){
@@ -52,14 +47,22 @@ public class GameControllerServerSide {
 				actionStringToAction.put(actionString, action);
 				allActionStrings += actionString + "++";
 			}
-			allActionStrings = allActionStrings.substring(0,allActionStrings.length()-3);
-			playerNameToActionMap.add(actionStringToAction);
+			allActionStrings = allActionStrings.substring(0,allActionStrings.length()-2);
+			playerActionMaps.add(actionStringToAction);
 			outWriters.get(i).println(allActionStrings);
 		}
 	}
 	
 	public void performAction(int playerNum, String actionStringKey){
-		System.out.println("Player wishes to use: " + actionStringKey);
+		Action action = playerActionMaps.get(playerNum).get(actionStringKey);
+		action.performAction(players.get(playerNum));
+		String moneyString = "";
+		for(Player player : players){
+			moneyString += player.getCoins() + ":";
+		}
+		for(PrintWriter outWriter : outWriters){
+			outWriter.println(Commands.UpdateCoins + "+++" + moneyString);
+		}
 	}
 	
 	public int advanceToNextPlayer() {
@@ -80,7 +83,15 @@ public class GameControllerServerSide {
 		//TODO account for players removed
 		for(int i = 0; i < outWriters.size(); i++){
 			if(i == curPlayer){
-				outWriters.get(i).println(Commands.ActionsEnable.toString());
+				Player player = players.get(i);
+				Map<String,Action> textToAction = playerActionMaps.get(i);
+				String enabledActions = "";
+				for(Entry<String,Action> actionEntry : textToAction.entrySet()){
+					if(actionEntry.getValue().canPerformAction(player)){
+						enabledActions += (actionEntry.getKey() + "++");
+					}
+				}
+				outWriters.get(i).println(Commands.ActionsEnable.toString()+"+++"+enabledActions);
 			}else{
 				outWriters.get(i).println(Commands.ActionsDisable.toString());
 			}
@@ -117,6 +128,18 @@ public class GameControllerServerSide {
 			players.remove(i);
 		}
 		return players.indexOf(nextPlayer);
+	}
+
+	public void updatePlayerCards() {
+		String cardsString = Commands.UpdateCards.toString() + "+++";
+		for(Player player : players){
+			cardsString += (player.getFirstCard().getType() + ":" + player.getFirstCard().isRevealed() +
+					"::" + player.getSecondCard().getType() + ":" + player.getSecondCard().isRevealed() + "++");
+		}
+		for(int i = 0; i < players.size(); i++){
+			outWriters.get(i).println(cardsString + i);
+		}
+		
 	}
 
 

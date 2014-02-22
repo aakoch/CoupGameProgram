@@ -2,7 +2,6 @@ package game.remote;
 
 import game.Game;
 import game.Player;
-import game.ui.javafx.PlayerWithChoices;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -60,8 +59,11 @@ public class CoupServer {
     		}
             	
     		List<Player> players = new ArrayList<Player>();
-    		for(String playerName : playerNames){
-    			players.add(new PlayerWithChoices(playerName));
+    		for(int i = 0; i < playerNames.size(); i++){
+    			final String playerName = playerNames.get(i);
+    			final PrintWriter writeToPlayer = playerWriters.get(i);
+    			final BufferedReader readFromPlayer = playerInputs.get(i);
+    			players.add(new RemotePlayer(playerName,writeToPlayer,readFromPlayer));
     		}
     		Game g = new Game(players);
     		g.deal();

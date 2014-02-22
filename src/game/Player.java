@@ -119,4 +119,8 @@ public class Player implements Serializable {
 		return name;
 	}
 
+	public void setCoins(int coins) {
+		this.money = coins;
+	}
+
 }

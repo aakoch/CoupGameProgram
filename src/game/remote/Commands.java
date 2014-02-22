@@ -2,5 +2,9 @@ package game.remote;
 
 public enum Commands {
 	ActionsEnable,
-	ActionsDisable
+	ActionsDisable,
+	UpdateCoins,
+	UpdateCards,
+	RevealCardChoice,
+	RevealOnlyUnrevealedCard
 }
