@@ -57,10 +57,15 @@ public class CoupApplicationClientSide extends Application {
 					playerUi.disableAllActions();
 				}else if(nextAction.equals(Commands.RevealOnlyUnrevealedCard.toString())){
 					playerForUi.revealACard();
+					playerUi.updateCardLabels();
+					processNextServerMessage();
 				}else if(nextAction.equals(Commands.RevealCardChoice.toString())){
 					playerUi.forceToReveal();
-				}
-				else{
+				}else if(nextAction.equals(Commands.DEFEAT.toString())){
+					playerUi.updateToDisplayerDefeat();
+				}else if(nextAction.equals(Commands.VICTORY.toString())){
+					playerUi.updateToDisplayerVictory();
+				}else{
 					String[] actionAndDetails = nextAction.split("\\+\\+\\+");
 					String action = actionAndDetails[0];
 					String details = actionAndDetails[1];

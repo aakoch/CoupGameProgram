@@ -12,7 +12,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-//TODO Implement version to use in client/server model
 public class GameControllerServerSide {
 	
     private final Game game;
@@ -66,46 +65,39 @@ public class GameControllerServerSide {
 	}
 	
 	public int advanceToNextPlayer() {
-//		commonUI.refresh();
-//		List<Integer> uisIdsToRemove = new ArrayList<Integer>();
-//		for(int i = 0; i < allPlayerUis.size(); i++){
-//			IndividualPlayer playerUi = allPlayerUis.get(i);
-//			playerUi.updateMoneyLabelText();
-//			playerUi.updateCardLabels();
-//			playerUi.disableAllActions();
-//			if(playerUi.playerIsEliminated()){
-//				uisIdsToRemove.add(i); //Should only ever be one... TODO confirm this!
-//			}
-//		}
 		
-		curPlayer = getNexPlayerIndex(curPlayer, new ArrayList<Integer>());//uisIdsToRemove);
-		
-		//TODO account for players removed
-		for(int i = 0; i < outWriters.size(); i++){
-			if(i == curPlayer){
-				Player player = players.get(i);
-				Map<String,Action> textToAction = playerActionMaps.get(i);
-				String enabledActions = "";
-				for(Entry<String,Action> actionEntry : textToAction.entrySet()){
-					if(actionEntry.getValue().canPerformAction(player)){
-						enabledActions += (actionEntry.getKey() + "++");
-					}
-				}
-				outWriters.get(i).println(Commands.ActionsEnable.toString()+"+++"+enabledActions);
-			}else{
-				outWriters.get(i).println(Commands.ActionsDisable.toString());
+		List<Integer> playersToRemove = new ArrayList<Integer>();
+		for(int i = 0; i < players.size(); i++){
+			if(players.get(i).eliminated()){
+				playersToRemove.add(i);
 			}
 		}
 		
-//		IndividualPlayer nextPlayerUi = allPlayerUis.get(curPlayer);
-//		if(allPlayerUis.size() == 1){
-//			nextPlayerUi.updateToDisplayerVictory();
-//		}else{
-//			nextPlayerUi.giveThisPlayerTheirTurn();
-//			nextPlayerUi.toFront();
-//		}
-//		return nextPlayerUi;
-		return curPlayer;
+		curPlayer = getNexPlayerIndex(curPlayer, playersToRemove);//uisIdsToRemove);
+		
+		
+		if(players.size() == 1){
+			outWriters.get(0).println(Commands.VICTORY);
+			return -1;
+		}
+		else{
+			for(int i = 0; i < outWriters.size(); i++){
+				if(i == curPlayer){
+					Player player = players.get(i);
+					Map<String,Action> textToAction = playerActionMaps.get(i);
+					String enabledActions = "";
+					for(Entry<String,Action> actionEntry : textToAction.entrySet()){
+						if(actionEntry.getValue().canPerformAction(player)){
+							enabledActions += (actionEntry.getKey() + "++");
+						}
+					}
+					outWriters.get(i).println(Commands.ActionsEnable.toString()+"+++"+enabledActions);
+				}else{
+					outWriters.get(i).println(Commands.ActionsDisable.toString());
+				}
+			}
+			return curPlayer;
+		}
 		
 	}
 
@@ -123,9 +115,9 @@ public class GameControllerServerSide {
 		}
 		Player nextPlayer = players.get(curPlayer);
 		for(int i : playersToRemove){
-//			TODO SEND MESSAGE TO CLIENT TO SHOw DEFEAT
-//			players.get(i).updateToDisplayerDefeat();
 			players.remove(i);
+			outWriters.get(i).println(Commands.DEFEAT);
+			outWriters.remove(i); //It's done now!
 		}
 		return players.indexOf(nextPlayer);
 	}

@@ -14,6 +14,7 @@ import java.util.Set;
 
 import javafx.event.Event;
 import javafx.event.EventHandler;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.layout.AnchorPane;
@@ -39,7 +40,6 @@ public class PlayerUi extends Stage{
 	private Button card1RevealButton;
 	private Button card2RevealButton;
 	private Color color;
-	private boolean advanceAfterChoosing = true;
 
 	public PlayerUi(final Player player, List<String> buttonLabels, 
 			final PrintWriter printToServer, final BufferedReader inFromServer){
@@ -133,6 +133,22 @@ public class PlayerUi extends Stage{
 		scene.setFill(color);
         setScene(scene);
         this.show();
+        
+        winnerText = new Text("YOU WIN!");
+		winnerText.setFont(Font.font("Verdana", 20));
+		winnerText.setLayoutX(0);
+		winnerText.setLayoutY(40);
+		winnerText.setFill(Color.WHITE);
+		winnerText.setVisible(false); //hide until end of game
+		pane.getChildren().add(winnerText );
+		
+		loserText = new Text("YOU LOSE! :(");
+		loserText.setFont(Font.font("Verdana", 20));
+		loserText.setLayoutX(0);
+		loserText.setLayoutY(40);
+		loserText.setFill(Color.WHITE);
+		loserText.setVisible(false); //hide until end of game
+		pane.getChildren().add(loserText );
 	}
 
 	private void updateFollowingCardReveal() {
@@ -154,12 +170,6 @@ public class PlayerUi extends Stage{
 		return 100 + (int) (Math.random() * 155);
 	}
 	
-//	public void giveThisPlayerTheirTurn(){
-//		for(ActionButton actionButton : allActionButtons){
-//			actionButton.enableBasedOnAction();
-//		}
-//	}
-
 	public void disableAllActions() {
 		for(Button actionButton : allActionButtons){
 			actionButton.setDisable(true);
@@ -188,35 +198,25 @@ public class PlayerUi extends Stage{
 
 	public void updateToDisplayerVictory() {
 		scene.setFill(Color.GREEN);
-		pane.getChildren().clear();
-		Text winnerText = new Text("YOU WIN!");
-		winnerText.setFont(Font.font("Verdana", 20));
-		winnerText.setLayoutX(0);
-		winnerText.setLayoutY(40);
-		winnerText.setFill(Color.WHITE);
-		pane.getChildren().add(winnerText );
+		for(Node node : pane.getChildren()){
+			node.setVisible(false);
+		}
+		this.winnerText.setVisible(true);
 	}
 
 	public void updateToDisplayerDefeat() {
 		scene.setFill(Color.RED);
-		pane.getChildren().clear();
-		Text loserText = new Text("YOU LOSE! :(");
-		loserText.setFont(Font.font("Verdana", 20));
-		loserText.setLayoutX(0);
-		loserText.setLayoutY(40);
-		loserText.setFill(Color.WHITE);
-		pane.getChildren().add(loserText );
+		for(Node node : pane.getChildren()){
+			node.setVisible(false);
+		}
+		this.loserText.setVisible(true);
+
 	}
 	
-	public void forceToReveal(boolean advanceAfterChoosing) {
+	public void forceToReveal() {
 		this.toFront();
-		this.advanceAfterChoosing = advanceAfterChoosing;
 		card1RevealButton.setVisible(true);
 		card2RevealButton.setVisible(true);
-	}
-
-	public void forceToReveal() {
-		this.forceToReveal(true);
 	}
 
 	public Paint getColor() {
@@ -232,6 +232,8 @@ public class PlayerUi extends Stage{
 	}
 	
 	private Popup popup;
+	private Text winnerText;
+	private Text loserText;
 
 	public void checkIfWantToBlock(final ActionButton actionToBlock, List<Defense> possibleDefenses) {
 		popup = new Popup();

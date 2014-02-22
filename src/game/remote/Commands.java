@@ -6,5 +6,6 @@ public enum Commands {
 	UpdateCoins,
 	UpdateCards,
 	RevealCardChoice,
-	RevealOnlyUnrevealedCard
+	RevealOnlyUnrevealedCard, 
+	DEFEAT, VICTORY
 }

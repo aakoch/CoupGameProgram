@@ -69,10 +69,11 @@ public class CoupServer {
     		g.deal();
     		GameControllerServerSide gameController = new GameControllerServerSide(g, playerWriters);
     		
-    		while(true){ //TODO until game is done
-    			int nextPlayer = gameController.advanceToNextPlayer();
+    		int nextPlayer = gameController.advanceToNextPlayer();
+    		while(nextPlayer != -1){
     			String playerAction = playerInputs.get(nextPlayer).readLine();
     			gameController.performAction(nextPlayer,playerAction);
+    			nextPlayer = gameController.advanceToNextPlayer();
     		}
     		
 
