@@ -11,6 +11,7 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javafx.application.Application;
@@ -18,7 +19,7 @@ import javafx.application.Application;
 public class CoupClient {
 
 	public static void main(String[] args){
-		String hostName = "hostIP";
+		String hostName = "10.0.0.142";
 		int portNumber = Integer.parseInt(args[0]);
         try {
         	Socket coupSocket = new Socket(hostName, portNumber);
@@ -50,9 +51,17 @@ public class CoupClient {
             }
             int thisPlayerIndex = Integer.parseInt(playerData[playerData.length - 1]);
             
-            CoupApplication.playerForUi = allPlayers.get(thisPlayerIndex);
-            CoupApplication.allPlayers = allPlayers;
-            Application.launch(CoupApplication.class);
+            
+            String[] buttonLabels = in.readLine().split("\\+\\+");
+            
+            CoupApplicationClientSide.playerForUi = allPlayers.get(thisPlayerIndex);
+            CoupApplicationClientSide.allPlayers = allPlayers;
+            CoupApplicationClientSide.buttonLabels = Arrays.asList(buttonLabels);
+            CoupApplicationClientSide.out = out;
+            CoupApplicationClientSide.in = in;
+            Application.launch(CoupApplicationClientSide.class);
+            
+            System.out.println("I don't think this happens...");
             
 //            PlayerUi playerDisplay = new PlayerUi(player);
         } catch (UnknownHostException e) {

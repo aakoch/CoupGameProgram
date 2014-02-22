@@ -11,7 +11,6 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class CoupServer {
@@ -67,9 +66,12 @@ public class CoupServer {
     		Game g = new Game(players);
     		g.deal();
     		GameControllerServerSide gameController = new GameControllerServerSide(g, playerWriters);
-    		int nextPlayer = gameController.advanceToNextPlayer();
-    		//TODO wait for player's response
     		
+    		while(true){ //TODO until game is done
+    			int nextPlayer = gameController.advanceToNextPlayer();
+    			String playerAction = playerInputs.get(nextPlayer).readLine();
+    			gameController.performAction(nextPlayer,playerAction);
+    		}
     		
 
 //            }

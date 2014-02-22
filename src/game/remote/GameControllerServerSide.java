@@ -2,26 +2,28 @@ package game.remote;
 
 import game.Game;
 import game.Player;
-import game.ui.javafx.ActionButton;
-import game.ui.javafx.CommonKnowledgeUI;
-import game.ui.javafx.IndividualPlayer;
-import game.ui.javafx.PlayerWithChoices;
+import game.actions.Action;
+import game.actions.ActionList;
 
 import java.io.PrintWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //TODO Implement version to use in client/server model
 public class GameControllerServerSide {
 	
     
-    private final List<IndividualPlayer> allPlayerUis = new ArrayList<IndividualPlayer>();
     private final List<Player> players;
+    private final List<PrintWriter> outWriters;
     private int curPlayer = -1;
-	private CommonKnowledgeUI commonUI;
+	
+	List<Map<String,Action>> playerNameToActionMap = new ArrayList<Map<String,Action>>();
 
 	public GameControllerServerSide(Game g, List<PrintWriter> outWriters) {
-//		int xPos = 0;
+		this.outWriters = outWriters;
+		//		int xPos = 0;
 //		int yPos = 0;
 //		for(Player player : g.getPlayers()){
 //			IndividualPlayer playerUi = new IndividualPlayer(g, (PlayerWithChoices)player, xPos, yPos, this);
@@ -39,10 +41,25 @@ public class GameControllerServerSide {
 			PrintWriter writer = outWriters.get(i);
 			writer.println(allPlayerReps + i);
 		}
+		
+		for(int i = 0; i < g.getPlayers().size(); i++){
+			Player player = g.getPlayer(i);
+			ActionList playerActions = new ActionList(g,player,null); //TODO card chooser implement
+			Map<String,Action> actionStringToAction = new HashMap<String,Action>();
+			String allActionStrings = "";
+			for(Action action : playerActions.getAllActions()){
+				String actionString = action.actionDescription();
+				actionStringToAction.put(actionString, action);
+				allActionStrings += actionString + "++";
+			}
+			allActionStrings = allActionStrings.substring(0,allActionStrings.length()-3);
+			playerNameToActionMap.add(actionStringToAction);
+			outWriters.get(i).println(allActionStrings);
+		}
 	}
 	
-	public IndividualPlayer playerNumber(int i){
-		return allPlayerUis.get(i);
+	public void performAction(int playerNum, String actionStringKey){
+		System.out.println("Player wishes to use: " + actionStringKey);
 	}
 	
 	public int advanceToNextPlayer() {
@@ -59,6 +76,15 @@ public class GameControllerServerSide {
 //		}
 		
 		curPlayer = getNexPlayerIndex(curPlayer, new ArrayList<Integer>());//uisIdsToRemove);
+		
+		//TODO account for players removed
+		for(int i = 0; i < outWriters.size(); i++){
+			if(i == curPlayer){
+				outWriters.get(i).println(Commands.ActionsEnable.toString());
+			}else{
+				outWriters.get(i).println(Commands.ActionsDisable.toString());
+			}
+		}
 		
 //		IndividualPlayer nextPlayerUi = allPlayerUis.get(curPlayer);
 //		if(allPlayerUis.size() == 1){
@@ -95,29 +121,25 @@ public class GameControllerServerSide {
 
 
 
-	public void giveOtherPlayersChanceToCallBluff(PlayerWithChoices playerBeingCalled, ActionButton actionAttempting) {
-		for(IndividualPlayer playerUi : allPlayerUis){
-			if(!playerUi.forPlayer(playerBeingCalled)){
-				playerUi.giveChanceToCallBluff(actionAttempting);
-			}
-		}
-		
-	}
-
-
-
-	public void closeAllOtherPopups(PlayerWithChoices player) {
-		for(IndividualPlayer playerUi : allPlayerUis){
-			if(!playerUi.forPlayer(player)){
-				playerUi.hidePopup();
-			}
-		}
-	}
-
-
-
-	public int getNumberOfRemainingPlayers() {
-		return allPlayerUis.size();
-	}
+//	public void giveOtherPlayersChanceToCallBluff(PlayerWithChoices playerBeingCalled, ActionButton actionAttempting) {
+//		for(IndividualPlayer playerUi : allPlayerUis){
+//			if(!playerUi.forPlayer(playerBeingCalled)){
+//				playerUi.giveChanceToCallBluff(actionAttempting);
+//			}
+//		}
+//		
+//	}
+//
+//	public void closeAllOtherPopups(PlayerWithChoices player) {
+//		for(IndividualPlayer playerUi : allPlayerUis){
+//			if(!playerUi.forPlayer(player)){
+//				playerUi.hidePopup();
+//			}
+//		}
+//	}
+//
+//	public int getNumberOfRemainingPlayers() {
+//		return allPlayerUis.size();
+//	}
 
 }

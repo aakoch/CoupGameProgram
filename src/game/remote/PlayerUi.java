@@ -4,9 +4,10 @@ import game.Card;
 import game.Player;
 import game.actions.Defense;
 import game.ui.javafx.ActionButton;
-import game.ui.javafx.GameController;
 import game.ui.javafx.PlayerWithChoices;
 
+import java.io.BufferedReader;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +29,7 @@ public class PlayerUi extends Stage{
 	private final Player player;
 	private static final int COMP_VERT_SPACE = 30;
 	
-	private List<ActionButton> allActionButtons = new ArrayList<ActionButton>();
+	private List<Button> allActionButtons = new ArrayList<Button>();
 	private Text moneyLabel;
 	private Text card1Label;
 	private Text card2Label;
@@ -39,10 +40,9 @@ public class PlayerUi extends Stage{
 	private Color color;
 	private boolean advanceAfterChoosing = true;
 
-	public PlayerUi(final Player player){
+	public PlayerUi(final Player player, List<String> buttonLabels, 
+			final PrintWriter printToServer, final BufferedReader inFromServer){
 		super();
-		
-		//TODO figure out how to make not closable
 		
 		this.player = player;
 		this.setX(0);
@@ -105,20 +105,25 @@ public class PlayerUi extends Stage{
 		pane.getChildren().add(moneyLabel );
 		moneyLabel.setLayoutY(COMP_VERT_SPACE * 2);
 		moneyLabel.setFill(labelColor);
-//		TODO Clicking will send a message to the server instead of handling the action inside the UI
-		//The client should receive a list of strings to display on buttons and whether they are enabled or not
-//		ActionList actionsForPlayer = new ActionList(game,player,new CardChooserUI(this));
-//		int buttonNumber = 1;
-//		for(final Action action: actionsForPlayer.getAllActions()){
-//			ActionButton button = new ActionButton(action,player,this,!(action instanceof AmbassadorAction
-//					|| action instanceof CoupAction || action instanceof AssassinAction));
-//			button.setLayoutX(0);
-//			button.setLayoutY((buttonNumber + 2) * COMP_VERT_SPACE);
-//			buttonNumber++;
-//			button.setDisable(true);
-//			pane.getChildren().add(button);
-//			allActionButtons.add(button);
-//		}
+		int buttonNumber = 1;
+		for(final String actionLabel: buttonLabels){
+			Button actionButton = new Button();
+			actionButton.setText(actionLabel);
+			actionButton.setOnMouseClicked(new EventHandler<Event>(){
+
+				@Override
+				public void handle(Event arg0) {
+					printToServer.println(actionLabel);
+					disableAllActions();
+				}
+			});
+			actionButton.setLayoutX(0);
+			actionButton.setLayoutY((buttonNumber + 2) * COMP_VERT_SPACE);
+			buttonNumber++;
+			actionButton.setDisable(true); //FIXME Need to send from server whether to enable or not...
+			pane.getChildren().add(actionButton);
+			allActionButtons.add(actionButton);
+		}
 		root.getChildren().add(pane);
 		
         scene = new Scene(root, 500, 500);
@@ -128,16 +133,16 @@ public class PlayerUi extends Stage{
         setScene(scene);
         this.show();
 	}
-
-	private void updateFollowingCardReveal(
-			final GameController gameController) {
-		card1RevealButton.setVisible(false);
-		card2RevealButton.setVisible(false);
-		updateCardLabels();
-		if(advanceAfterChoosing){
-			gameController.advanceToNextPlayer();
-		}
-	}
+//
+//	private void updateFollowingCardReveal(
+//			final GameController gameController) {
+//		card1RevealButton.setVisible(false);
+//		card2RevealButton.setVisible(false);
+//		updateCardLabels();
+//		if(advanceAfterChoosing){
+//			gameController.advanceToNextPlayer();
+//		}
+//	}
 	
 	private String getCardDisplay(Card card) {
 		return "Card " + card.getType() + " is " + (card.isRevealed() ? "" : "NOT ") + "reveald";
@@ -151,15 +156,23 @@ public class PlayerUi extends Stage{
 		return 100 + (int) (Math.random() * 155);
 	}
 	
-	public void giveThisPlayerTheirTurn(){
-		for(ActionButton actionButton : allActionButtons){
-			actionButton.enableBasedOnAction();
-		}
-	}
+//	public void giveThisPlayerTheirTurn(){
+//		for(ActionButton actionButton : allActionButtons){
+//			actionButton.enableBasedOnAction();
+//		}
+//	}
 
 	public void disableAllActions() {
-		for(ActionButton actionButton : allActionButtons){
+		for(Button actionButton : allActionButtons){
 			actionButton.setDisable(true);
+		}
+		CoupApplicationClientSide.processNextServerMessage(); //Wait for next command
+	}
+	
+	//FIXME eventually will need to enable/disable based on usefulness
+	public void enableAllActions() {
+		for(Button actionButton : allActionButtons){
+			actionButton.setDisable(false);
 		}
 	}
 
