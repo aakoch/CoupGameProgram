@@ -53,6 +53,7 @@ public class CoupApplicationClientSide extends Application {
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
+				System.out.println("NEXT ACTION: " + nextAction);
 				if(nextAction.equals(Commands.ActionsDisable.toString())){
 					playerUi.disableAllActions();
 				}else if(nextAction.equals(Commands.RevealOnlyUnrevealedCard.toString())){
@@ -74,6 +75,9 @@ public class CoupApplicationClientSide extends Application {
 						Set<String> buttonsToEnable = new HashSet<String>(Arrays.asList(details.split("\\+\\+")));
 						playerUi.enableActions(buttonsToEnable);
 					}
+					else if(action.equals(Commands.ChooseCards.toString())){
+						playerUi.displayCardChooser(details);
+					}
 					else if(action.equals(Commands.UpdateCoins.toString())){
 						String[] newCoinValues = details.split(":");
 						for(int i = 0; i < allPlayers.size(); i++){
@@ -84,6 +88,7 @@ public class CoupApplicationClientSide extends Application {
 						processNextServerMessage();
 					}
 					else if(action.equals(Commands.UpdateCards.toString())){
+						System.out.println("===GOT UPDATE CARDS ACTION===");
 						String[] cardDetailsPerPlayer = details.split("\\+\\+");
 						for(int i = 0; i < allPlayers.size(); i++){
 							String[] cardDetailsPerCard = cardDetailsPerPlayer[i].split("::");
@@ -93,7 +98,7 @@ public class CoupApplicationClientSide extends Application {
 							allPlayers.get(i).replaceFirstCard(buildNewCard(firstCardDetails));
 							allPlayers.get(i).replaceSecondCard(buildNewCard(secondCardDetails));
 						}
-//						playerUi.updateCardLabels(); //This was already updated so shouldn't need to do again
+						playerUi.updateCardLabels();
 						commonUi.refresh();
 						processNextServerMessage();
 					}

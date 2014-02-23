@@ -43,13 +43,6 @@ public class CoupServer {
         				new InputStreamReader(clientSocket.getInputStream())));
         	}
         
-            // Initiate conversation with client
-//            out.println("How Many Players?"); //FIXME for now assuming 4 players... change in future
-
-            
-//            if ((inputLine = in.readLine()) != null) {
-//            	int numPlayers = Integer.parseInt(inputLine);
-//            	
         	List<String> playerNames = new ArrayList<String>();
     		for(int i = 0; i < portNumbers.size(); i++){
     			playerWriters.get(i).println("Player Name?");
@@ -67,7 +60,7 @@ public class CoupServer {
     		}
     		Game g = new Game(players);
     		g.deal();
-    		GameControllerServerSide gameController = new GameControllerServerSide(g, playerWriters);
+    		GameControllerServerSide gameController = new GameControllerServerSide(g, playerWriters,playerInputs);
     		
     		int nextPlayer = gameController.advanceToNextPlayer();
     		while(nextPlayer != -1){

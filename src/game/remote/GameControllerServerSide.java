@@ -5,6 +5,7 @@ import game.Player;
 import game.actions.Action;
 import game.actions.ActionList;
 
+import java.io.BufferedReader;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,15 +15,14 @@ import java.util.Map.Entry;
 
 public class GameControllerServerSide {
 	
-    private final Game game;
     private final List<Player> players;
     private final List<PrintWriter> outWriters;
     private int curPlayer = -1;
 	
 	List<Map<String,Action>> playerActionMaps = new ArrayList<Map<String,Action>>();
+	private List<BufferedReader> playerInputs;
 
-	public GameControllerServerSide(Game g, List<PrintWriter> outWriters) {
-		this.game = g;
+	public GameControllerServerSide(Game g, List<PrintWriter> outWriters, List<BufferedReader> playerInputs) {
 		this.outWriters = outWriters;
 		players = g.getPlayers();
 		String allPlayerReps = "";
@@ -38,7 +38,8 @@ public class GameControllerServerSide {
 		
 		for(int i = 0; i < g.getPlayers().size(); i++){
 			Player player = g.getPlayer(i);
-			ActionList playerActions = new ActionList(g,player,null); //TODO card chooser implement
+			RemoteCardChooser remoteCardChooser = new RemoteCardChooser(players,outWriters,playerInputs);
+			ActionList playerActions = new ActionList(g,player,remoteCardChooser);
 			Map<String,Action> actionStringToAction = new HashMap<String,Action>();
 			String allActionStrings = "";
 			for(Action action : playerActions.getAllActions()){
@@ -62,6 +63,7 @@ public class GameControllerServerSide {
 		for(PrintWriter outWriter : outWriters){
 			outWriter.println(Commands.UpdateCoins + "+++" + moneyString);
 		}
+		updatePlayerCards();
 	}
 	
 	public int advanceToNextPlayer() {

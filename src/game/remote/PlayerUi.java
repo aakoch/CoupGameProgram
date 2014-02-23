@@ -148,7 +148,11 @@ public class PlayerUi extends Stage{
 		loserText.setLayoutY(40);
 		loserText.setFill(Color.WHITE);
 		loserText.setVisible(false); //hide until end of game
-		pane.getChildren().add(loserText );
+		pane.getChildren().add(loserText);
+		
+		cardChooserUI = new CardChooserUI(color, printToServer, pane);
+		cardChooserUI.setVisible(false);
+		root.getChildren().add(cardChooserUI);
 	}
 
 	private void updateFollowingCardReveal() {
@@ -188,6 +192,7 @@ public class PlayerUi extends Stage{
 	}
 
 	public void updateCardLabels() {
+		System.out.println("===player has cards:  " + player.getFirstCard() + " and " + player.getSecondCard());
 		card1Label.setText(getCardDisplay(player.getFirstCard()));
 		card2Label.setText(getCardDisplay(player.getSecondCard()));
 	}
@@ -234,6 +239,7 @@ public class PlayerUi extends Stage{
 	private Popup popup;
 	private Text winnerText;
 	private Text loserText;
+	private CardChooserUI cardChooserUI;
 
 	public void checkIfWantToBlock(final ActionButton actionToBlock, List<Defense> possibleDefenses) {
 		popup = new Popup();
@@ -310,6 +316,12 @@ public class PlayerUi extends Stage{
 		});
 		doNotCallButton.setLayoutY(50);
 		popupPane.getChildren().add(doNotCallButton);
+	}
+
+	public void displayCardChooser(String cardChoiceDetails) {
+		pane.setVisible(false);
+		this.cardChooserUI.updateWithChoices(cardChoiceDetails);
+		cardChooserUI.setVisible(true);
 	}
 
 	
