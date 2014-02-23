@@ -1,2 +1,13 @@
 I made this for fun based on the Coup card game: http://boardgamegeek.com/boardgame/131357/coup
 Please do NOT try to monetize this code without permission from me and the creators of Coup.
+
+Running the remote UI program:
+Run on the machine you want to use as server:
+java game.remote.CoupServer [numberOfPlayers] 
+Run on a different machine for each player (note, one player can be on the server machine):
+game.remote.CoupClient [ipOfServerMachine] [portNum]*
+*portNum should start at 4445 and increment by 1 for each additional player.  You must launch the players in port order starting with 4445 and going up.
+
+NOTE:  You can create an executable jar to distribute this game to other players without giving them the source code .java files.
+
+Have fun!  And remember to still support the creator of Coup by buying a real copy of the game!
