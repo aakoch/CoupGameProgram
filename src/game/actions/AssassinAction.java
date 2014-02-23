@@ -18,7 +18,7 @@ public class AssassinAction implements Action {
 	public void performAction(Player playerDoingAssassinating) {
 		// TODO Auto-generated method stub
 		playerDoingAssassinating.takeActionAssassin();
-		playerToAssassinate.revealACard();
+		playerToAssassinate.revealACard(playerDoingAssassinating + " has assassinated you.");
 	}
 
 	@Override

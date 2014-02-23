@@ -24,7 +24,7 @@ public class RemotePlayer extends Player {
 	}
 	
 	@Override
-	public void revealACard(){
+	public void revealACard(String reasonForReveal){
 		if(getFirstCard().isRevealed()){
 			getSecondCard().reveal();
 			writeToPlayer.println(Commands.RevealOnlyUnrevealedCard);
@@ -32,7 +32,7 @@ public class RemotePlayer extends Player {
 			getFirstCard().reveal();
 			writeToPlayer.println(Commands.RevealOnlyUnrevealedCard);
 		}else{
-			writeToPlayer.println(Commands.RevealCardChoice);
+			writeToPlayer.println(Commands.RevealCardChoice+"+++"+reasonForReveal);
 			try {
 				String doneResponse = readFromPlayer.readLine(); //Wait for 'DONE' response
 				if(doneResponse.equals(Responses.FirstCard.toString())){

@@ -2,5 +2,9 @@ package game.remote;
 
 public enum Responses {
 	FirstCard,
-	SecondCard
+	SecondCard,
+	AccuseOfBluff,
+	DoNotAccuseOfBluff, 
+	Block,
+	DoNotBlock
 }

@@ -2,8 +2,8 @@ package game.remote;
 
 import game.Card;
 import game.Player;
+import game.actions.Action;
 import game.actions.Defense;
-import game.ui.javafx.ActionButton;
 import game.ui.javafx.PlayerWithChoices;
 
 import java.io.BufferedReader;
@@ -23,7 +23,6 @@ import javafx.scene.paint.Color;
 import javafx.scene.paint.Paint;
 import javafx.scene.text.Font;
 import javafx.scene.text.Text;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
 
 public class PlayerUi extends Stage{
@@ -40,12 +39,15 @@ public class PlayerUi extends Stage{
 	private Button card1RevealButton;
 	private Button card2RevealButton;
 	private Color color;
+	private Text infoLabel;
+	private PrintWriter printToServer;
 
 	public PlayerUi(final Player player, List<String> buttonLabels, 
 			final PrintWriter printToServer, final BufferedReader inFromServer){
 		super();
 		
 		this.player = player;
+		this.printToServer = printToServer;
 		this.setX(0);
 		this.setY(0);
 		
@@ -54,24 +56,25 @@ public class PlayerUi extends Stage{
 		int sceneB = randomColorVal();
 		color = Color.rgb(sceneR, sceneG, sceneB);
 		
-		int inverseR = 255 - sceneR;
-		int inverseG = 255 - sceneG;
-		int inverseB = 255 - sceneB;
-		
-		Color labelColor = Color.rgb(inverseR, inverseG, inverseB);
+		Color labelColor = Color.BLACK;
 		
 		AnchorPane root = new AnchorPane();
 		pane = new Pane();
 		
-		card1Label = new Text(getCardDisplay(player.getFirstCard()));
+		infoLabel = new Text("");
+		infoLabel.setLayoutX(20);
+		infoLabel.setLayoutY(10);
+		pane.getChildren().add(infoLabel);
+		
+		card1Label = new Text(getCardDisplay(player.getFirstCard(),1));
 		pane.getChildren().add(card1Label);
 		card1Label.setFill(labelColor);
-		card1Label.setLayoutY(2 * COMP_VERT_SPACE/3);
+		card1Label.setLayoutY(20+2 * COMP_VERT_SPACE/3);
 		
 		card1RevealButton = new Button("Reveal Card 1");
 		card1RevealButton.setVisible(false);
-		card1RevealButton.setLayoutY(0);
-		card1RevealButton.setLayoutX(200);
+		card1RevealButton.setLayoutY(20+0);
+		card1RevealButton.setLayoutX(210);
 		card1RevealButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {
@@ -83,14 +86,14 @@ public class PlayerUi extends Stage{
 		});
 		pane.getChildren().add(card1RevealButton);
 		
-		card2Label = new Text(getCardDisplay(player.getSecondCard()));
+		card2Label = new Text(getCardDisplay(player.getSecondCard(),2));
 		pane.getChildren().add(card2Label);
-		card2Label.setLayoutY(4 * COMP_VERT_SPACE/3);
+		card2Label.setLayoutY(20+4 * COMP_VERT_SPACE/3);
 		card2Label.setFill(labelColor);
 		
 		card2RevealButton = new Button("Reveal Card 2");
-		card2RevealButton.setLayoutY(COMP_VERT_SPACE);
-		card2RevealButton.setLayoutX(200);
+		card2RevealButton.setLayoutY(20+COMP_VERT_SPACE);
+		card2RevealButton.setLayoutX(210);
 		card2RevealButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {
@@ -104,9 +107,10 @@ public class PlayerUi extends Stage{
 		
 		moneyLabel = new Text(getCoinDisplay(player));
 		pane.getChildren().add(moneyLabel );
-		moneyLabel.setLayoutY(COMP_VERT_SPACE * 2);
+		moneyLabel.setLayoutY(20+COMP_VERT_SPACE * 2);
 		moneyLabel.setFill(labelColor);
 		int buttonNumber = 1;
+		int currentYPos = 0;
 		for(final String actionLabel: buttonLabels){
 			Button actionButton = new Button();
 			actionButton.setText(actionLabel);
@@ -119,9 +123,10 @@ public class PlayerUi extends Stage{
 				}
 			});
 			actionButton.setLayoutX(0);
-			actionButton.setLayoutY((buttonNumber + 2) * COMP_VERT_SPACE);
+			currentYPos = 20+(buttonNumber + 2) * COMP_VERT_SPACE;
+			actionButton.setLayoutY(currentYPos);
 			buttonNumber++;
-			actionButton.setDisable(true); //FIXME Need to send from server whether to enable or not...
+			actionButton.setDisable(true);
 			pane.getChildren().add(actionButton);
 			allActionButtons.add(actionButton);
 		}
@@ -153,17 +158,24 @@ public class PlayerUi extends Stage{
 		cardChooserUI = new CardChooserUI(color, printToServer, pane);
 		cardChooserUI.setVisible(false);
 		root.getChildren().add(cardChooserUI);
+		
+		root.getChildren().add(buildBluffCallingPane(currentYPos + 20));
+		bluffCallingPane.setVisible(false);
+		
+		root.getChildren().add(buildBlockingPane(currentYPos + 20));
+		blockingPane.setVisible(false);
 	}
 
 	private void updateFollowingCardReveal() {
 		card1RevealButton.setVisible(false);
 		card2RevealButton.setVisible(false);
+		infoLabel.setText("");
 		updateCardLabels();
 		CoupApplicationClientSide.processNextServerMessage();
 	}
 	
-	private String getCardDisplay(Card card) {
-		return "Card " + card.getType() + " is " + (card.isRevealed() ? "" : "NOT ") + "reveald";
+	private String getCardDisplay(Card card, int cardNum) {
+		return "Card " + cardNum + " of type " +  card.getType() + " is " + (card.isRevealed() ? "" : "NOT ") + "revealed";
 	}
 
 	private String getCoinDisplay(final Player player) {
@@ -193,8 +205,8 @@ public class PlayerUi extends Stage{
 
 	public void updateCardLabels() {
 		System.out.println("===player has cards:  " + player.getFirstCard() + " and " + player.getSecondCard());
-		card1Label.setText(getCardDisplay(player.getFirstCard()));
-		card2Label.setText(getCardDisplay(player.getSecondCard()));
+		card1Label.setText(getCardDisplay(player.getFirstCard(),1));
+		card2Label.setText(getCardDisplay(player.getSecondCard(),2));
 	}
 
 	public boolean playerIsEliminated() {
@@ -218,8 +230,9 @@ public class PlayerUi extends Stage{
 
 	}
 	
-	public void forceToReveal() {
+	public void forceToReveal(String reason) {
 		this.toFront();
+		infoLabel.setText(reason + "  You must reveal a card");
 		card1RevealButton.setVisible(true);
 		card2RevealButton.setVisible(true);
 	}
@@ -236,86 +249,134 @@ public class PlayerUi extends Stage{
 		return player.equals(playerBeingCalled);
 	}
 	
-	private Popup popup;
 	private Text winnerText;
 	private Text loserText;
 	private CardChooserUI cardChooserUI;
+	
+	private Text bluffCallingText;
+	private Pane bluffCallingPane;
+	
+	private Text blockingText;
+	private Pane blockingPane;
+	private List<Button> allBlockingButtons;
 
-	public void checkIfWantToBlock(final ActionButton actionToBlock, List<Defense> possibleDefenses) {
-		popup = new Popup();
-		popup.setX(getX());
-		popup.setY(getY());
-		popup.show(this);
+	public void checkIfWantToBlock(final String playerAttemptingAction,
+			final String actionToBlock, List<String> possibleDefenses) {
+		String blockingTextStr = playerAttemptingAction + " is attempting to use " + actionToBlock 
+				+" (against you).  Would you like to block? Possible blocking actions are:";
+		currentDefenseOptions = possibleDefenses;
+		for(int i = 0; i < possibleDefenses.size(); i++){
+			blockingTextStr += "\r\n" + (i+1) + ": " + possibleDefenses.get(i);
+			allBlockingButtons.get(i).setVisible(true);
+		}
+		blockingText.setText(blockingTextStr);
+		blockingPane.setVisible(true);
 		
-		Pane popupPane = new Pane();
-		popup.getContent().add(popupPane);
-		int yLoc = 20;
-		for(final Defense defense : possibleDefenses){
-			Button blockButton = new Button("Click to block " + actionToBlock.getActionName() + " with " + defense.cardTypeRequired());
+	}
+
+	private Pane buildBlockingPane(int yOffset) {
+		blockingPane = new Pane();
+		int yLoc = 20 + yOffset;
+		
+		blockingText = new Text("Blocking message will go here");
+		blockingText.setLayoutY(yLoc);
+		blockingPane.getChildren().add(blockingText);
+		yLoc += 50;
+		
+		Button doNotBlockButton = new Button("Click to NOT block");
+		doNotBlockButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				for(Button blockButton : allBlockingButtons){
+					blockButton.setVisible(false);
+				}
+				blockingPane.setVisible(false);
+				printToServer.println(Responses.DoNotBlock);
+				CoupApplicationClientSide.processNextServerMessage();
+			}
+		});
+		doNotBlockButton.setLayoutY(yLoc);
+		yLoc += 30;
+		blockingPane.getChildren().add(doNotBlockButton);
+		
+		allBlockingButtons = new ArrayList<Button>();
+		for(int i = 0; i < 5; i++){ //We figure there could never be more than 5 possible blocks...
+			final int iCopy = i;
+			Button blockButton = new Button("Click to block with defense option #" + (i+1));
 			blockButton.setOnMouseClicked(new EventHandler<Event>(){
 				@Override
 				public void handle(Event arg0) {
-					popup.hide();
-					actionToBlock.continueAction(defense,player);
+					for(Button blockButton : allBlockingButtons){
+						blockButton.setVisible(false);
+					}
+					blockingPane.setVisible(false);
+					printToServer.println(Responses.Block+"+++"+getChosenDefense(iCopy));
+					CoupApplicationClientSide.processNextServerMessage();
 				}
 			});
 			blockButton.setLayoutY(yLoc);
 			yLoc += 30;
-			popupPane.getChildren().add(blockButton);
+			blockButton.setVisible(false);
+			blockingPane.getChildren().add(blockButton);
+			allBlockingButtons.add(blockButton);
 		}
 		
-		Button doNotBlockButton = new Button("Click to NOT block " + actionToBlock.getActionName());
-		doNotBlockButton.setOnMouseClicked(new EventHandler<Event>(){
-			@Override
-			public void handle(Event arg0) {
-				popup.hide();
-				actionToBlock.continueAction(null,null);
-			}
-		});
-		doNotBlockButton.setLayoutY(yLoc);
-		popupPane.getChildren().add(doNotBlockButton);
+		return blockingPane;
+		
+	}
+	
+	List<String> currentDefenseOptions;
+
+	protected String getChosenDefense(int i) {
+		return currentDefenseOptions.get(i);
 	}
 
-	public void hidePopup() {
-		if(popup != null){
-			popup.hide();
-		}
-	}
-
-	public void checkIfWantToCallBluff(final ActionButton actionAttempting, 
-			final PlayerWithChoices blockingPlayer, final Defense defenseUsing) {
-		// TODO Auto-generated method stub
-		popup = new Popup();
-		popup.setX(getX());
-		popup.setY(getY());
-		popup.show(this);
+	public Pane buildBluffCallingPane(int currentYPos){
+		bluffCallingPane = new Pane();
 		
-		Pane popupPane = new Pane();
-		popup.getContent().add(popupPane);
+		bluffCallingText = new Text("Bluff calling message will go here");
+		bluffCallingText.setLayoutY(currentYPos + 20);
+		bluffCallingPane.getChildren().add(bluffCallingText);
 		
-		Button callBluffButton = new Button("Click to accuse " + blockingPlayer 
-				+ " of bluffing about having " + defenseUsing.cardTypeRequired());
+		Button callBluffButton = new Button("Click to accuse player of bluffing about having this card ");
 		callBluffButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {
-				popup.hide();
-				actionAttempting.continueAfterDefenseBluffCall(true,blockingPlayer,defenseUsing);
+				bluffCallingPane.setVisible(false);
+				printToServer.println(Responses.AccuseOfBluff);
+				CoupApplicationClientSide.processNextServerMessage();
 			}
 		});
-		callBluffButton.setLayoutY(20);
-		popupPane.getChildren().add(callBluffButton);
+		callBluffButton.setLayoutY(currentYPos + 40);
+		bluffCallingPane.getChildren().add(callBluffButton);
 		
-		Button doNotCallButton = new Button("Click to NOT accuse " + blockingPlayer 
-				+ " of bluffing about having " + defenseUsing.cardTypeRequired());
+		Button doNotCallButton = new Button("Click to NOT accuse player of bluffing about having this card ");
 		doNotCallButton.setOnMouseClicked(new EventHandler<Event>(){
 			@Override
 			public void handle(Event arg0) {
-				popup.hide();
-				actionAttempting.continueAfterDefenseBluffCall(false,blockingPlayer,defenseUsing);
+				bluffCallingPane.setVisible(false);
+				printToServer.println(Responses.DoNotAccuseOfBluff);
+				CoupApplicationClientSide.processNextServerMessage();
 			}
 		});
-		doNotCallButton.setLayoutY(50);
-		popupPane.getChildren().add(doNotCallButton);
+		doNotCallButton.setLayoutY(currentYPos + 70);
+		bluffCallingPane.getChildren().add(doNotCallButton);
+		
+		return bluffCallingPane;
+	}
+	
+
+	public void checkIfWantToCallBluff(String playerAttempting,
+			String cardUsedForActionAttempting) {
+		bluffCallingText.setText(playerAttempting + " is claiming to have " + cardUsedForActionAttempting);
+		bluffCallingPane.setVisible(true);
+	}
+
+	public void checkIfWantToCallBluff(final Action actionAttempting, 
+			final PlayerWithChoices blockingPlayer, final Defense defenseUsing) {
+		String[] actionAttemptingNameArray = actionAttempting.getClass().getName().split("\\.");
+		bluffCallingText.setText(blockingPlayer + " claiming to have " + defenseUsing.cardTypeRequired() 
+				+ " and using it to block " + actionAttemptingNameArray[actionAttemptingNameArray.length - 1]);
 	}
 
 	public void displayCardChooser(String cardChoiceDetails) {
@@ -323,6 +384,7 @@ public class PlayerUi extends Stage{
 		this.cardChooserUI.updateWithChoices(cardChoiceDetails);
 		cardChooserUI.setVisible(true);
 	}
+
 
 	
 }

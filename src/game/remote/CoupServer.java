@@ -65,7 +65,7 @@ public class CoupServer {
     		int nextPlayer = gameController.advanceToNextPlayer();
     		while(nextPlayer != -1){
     			String playerAction = playerInputs.get(nextPlayer).readLine();
-    			gameController.performAction(nextPlayer,playerAction);
+    			gameController.attemptToPerformAction(nextPlayer,playerAction);
     			nextPlayer = gameController.advanceToNextPlayer();
     		}
     		

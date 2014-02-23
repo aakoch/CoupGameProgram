@@ -17,7 +17,7 @@ public class CoupAction implements Action {
 	@Override
 	public void performAction(Player player) {
 		player.takeActionCoup();
-		playerToBeCouped.revealACard();
+		playerToBeCouped.revealACard(player + " has couped you.");
 	}
 
 	@Override

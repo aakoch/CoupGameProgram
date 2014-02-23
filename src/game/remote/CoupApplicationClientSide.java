@@ -57,21 +57,39 @@ public class CoupApplicationClientSide extends Application {
 				if(nextAction.equals(Commands.ActionsDisable.toString())){
 					playerUi.disableAllActions();
 				}else if(nextAction.equals(Commands.RevealOnlyUnrevealedCard.toString())){
-					playerForUi.revealACard();
+					playerForUi.revealACard(""); //TODO add reason to command?
 					playerUi.updateCardLabels();
 					processNextServerMessage();
-				}else if(nextAction.equals(Commands.RevealCardChoice.toString())){
-					playerUi.forceToReveal();
 				}else if(nextAction.equals(Commands.DEFEAT.toString())){
 					playerUi.updateToDisplayerDefeat();
 				}else if(nextAction.equals(Commands.VICTORY.toString())){
 					playerUi.updateToDisplayerVictory();
 				}else{
+					/*
+					 * Commands.Block + "+++" + 
+							players.get(playerNum) + "++" + action + "++" + 
+							defensesThatCanBlockString
+					 */
 					String[] actionAndDetails = nextAction.split("\\+\\+\\+");
 					String action = actionAndDetails[0];
 					String details = actionAndDetails[1];
 					System.out.println(details);
-					if(action.equals(Commands.ActionsEnable.toString())){
+					if(action.equals(Commands.Block.toString())){
+						String[] detailParts = details.split("\\+\\+");
+						String attackingPlayer = detailParts[0];
+						String actionAttempting = detailParts[1];
+						List<String> defenseOptions = Arrays.asList(detailParts[2].split(":"));
+						playerUi.checkIfWantToBlock(attackingPlayer, actionAttempting, defenseOptions);
+					}
+					else if(action.equals(Commands.CallBluff.toString())){
+						String playerAttempting = details.split(":")[0];
+						String actionAttempting = details.split(":")[1];
+						playerUi.checkIfWantToCallBluff(playerAttempting,actionAttempting);
+					}
+					else if(action.equals(Commands.RevealCardChoice.toString())){
+						playerUi.forceToReveal(details);
+					}
+					else if(action.equals(Commands.ActionsEnable.toString())){
 						Set<String> buttonsToEnable = new HashSet<String>(Arrays.asList(details.split("\\+\\+")));
 						playerUi.enableActions(buttonsToEnable);
 					}

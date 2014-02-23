@@ -8,5 +8,7 @@ public enum Commands {
 	RevealCardChoice,
 	RevealOnlyUnrevealedCard, 
 	ChooseCards,
+	CallBluff,
+	Block,
 	DEFEAT, VICTORY
 }

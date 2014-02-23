@@ -103,7 +103,7 @@ public class Player implements Serializable {
 	}
 	
 	//FIXME give player an option...
-	public void revealACard() {
+	public void revealACard(String reasonForReveal) {
 		if(getSecondCard().isRevealed()){
 			getFirstCard().reveal();
 		}
@@ -121,6 +121,10 @@ public class Player implements Serializable {
 
 	public void setCoins(int coins) {
 		this.money = coins;
+	}
+
+	public void revealACard() {
+		revealACard("");
 	}
 
 }

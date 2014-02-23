@@ -1,11 +1,14 @@
 package game.remote;
 
+import game.CardType;
 import game.Game;
 import game.Player;
 import game.actions.Action;
 import game.actions.ActionList;
+import game.actions.Defense;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -15,15 +18,18 @@ import java.util.Map.Entry;
 
 public class GameControllerServerSide {
 	
+	private final Game game;
     private final List<Player> players;
     private final List<PrintWriter> outWriters;
+    private final List<BufferedReader> playerInputs;
     private int curPlayer = -1;
 	
 	List<Map<String,Action>> playerActionMaps = new ArrayList<Map<String,Action>>();
-	private List<BufferedReader> playerInputs;
 
 	public GameControllerServerSide(Game g, List<PrintWriter> outWriters, List<BufferedReader> playerInputs) {
+		this.game = g;
 		this.outWriters = outWriters;
+		this.playerInputs = playerInputs;
 		players = g.getPlayers();
 		String allPlayerReps = "";
 		for(int i = 0; i < g.getPlayers().size(); i++){
@@ -53,8 +59,112 @@ public class GameControllerServerSide {
 		}
 	}
 	
-	public void performAction(int playerNum, String actionStringKey){
+	public void attemptToPerformAction(int playerNum, String actionStringKey){
 		Action action = playerActionMaps.get(playerNum).get(actionStringKey);
+		Player actingPlayer = players.get(playerNum);
+		
+		CardType cardTypeRequired = action.cardTypeRequired();
+		if(cardTypeRequired != null){
+			for(int i = 0; i < outWriters.size(); i++){
+				if(i != playerNum){
+					outWriters.get(i).println(Commands.CallBluff.toString() + "+++" + actingPlayer + ":" + cardTypeRequired);
+					try {
+						String response = playerInputs.get(i).readLine();
+						if(response.equals(Responses.AccuseOfBluff.toString())){
+							if(actingPlayer.has(cardTypeRequired)){
+								//bluff caller is wrong
+								Player bluffCaller = players.get(i);
+								bluffCaller.revealACard("Sorry, you were wrong.  " + actingPlayer + " did have " + cardTypeRequired);
+								//TODO need to reveal two if bluff caller is target of assassin?
+								game.reshuffleCardAndDrawNewCard(actingPlayer, cardTypeRequired);
+								updatePlayerCards();
+								checkForBlockingAndThenPerformAction(playerNum, action);
+							}else{
+								//TODO still pay if attempting assassination??
+								actingPlayer.revealACard(players.get(i) + " called your bluff about having " + cardTypeRequired);
+							}
+							return;
+						}
+					} catch (IOException e) {
+						throw new RuntimeException("Could not get player input",e);
+					}
+				}
+			}
+		}
+		
+		checkForBlockingAndThenPerformAction(playerNum, action);
+	}
+
+	private void checkForBlockingAndThenPerformAction(int playerNum, Action action) {
+		List<Player> targetedPlayers = action.targetedPlayers();
+		List<Defense> defensesThatCanBlock = action.defensesThatCanBlock();
+		if(targetedPlayers != null && !targetedPlayers.isEmpty() && 
+				defensesThatCanBlock != null && !defensesThatCanBlock.isEmpty()){
+			Map<String,Defense> defenseStrToDefense = new HashMap<String,Defense>();
+			String defensesThatCanBlockString = "";
+			for(Defense defense : defensesThatCanBlock){
+				String[] defensePackageStruct = defense.getClass().getName().split("\\.");
+				String defenseDescript = defensePackageStruct[defensePackageStruct.length - 1];
+				defensesThatCanBlockString += defenseDescript + ":";
+				defenseStrToDefense.put(defenseDescript, defense);
+			}
+			String[] actionPackageStruct = action.getClass().getName().split("\\.");
+			String actionStr = actionPackageStruct[actionPackageStruct.length - 1];
+			for(Player defendingPlayer : targetedPlayers){
+				int targetedPlayerIndex = players.indexOf(defendingPlayer);
+				if(targetedPlayerIndex != -1){
+					outWriters.get(targetedPlayerIndex).println(Commands.Block + "+++" + 
+							players.get(playerNum) + "++" + actionStr + "++" + 
+							defensesThatCanBlockString.substring(0, defensesThatCanBlockString.length()));
+					try {
+						String response = playerInputs.get(targetedPlayerIndex).readLine();
+						if(response.startsWith(Responses.Block.toString())){
+							Defense defense = defenseStrToDefense.get(response.split("\\+\\+\\+")[1]);
+							
+							for(int i = 0; i < outWriters.size(); i++){
+								if(i != targetedPlayerIndex){
+									outWriters.get(i).println(Commands.CallBluff.toString() + "+++" + defendingPlayer + ":" + defense.cardTypeRequired());
+									try {
+										response = playerInputs.get(i).readLine();
+										if(response.equals(Responses.AccuseOfBluff.toString())){
+											if(defendingPlayer.has(defense.cardTypeRequired())){
+												//bluff caller is wrong
+												Player bluffCaller = players.get(i);
+												bluffCaller.revealACard("Sorry, you were wrong.  " + defendingPlayer + " did have " + defense.cardTypeRequired());
+												game.reshuffleCardAndDrawNewCard(defendingPlayer, defense.cardTypeRequired());
+												updatePlayerCards();
+												defense.defendAgainstPlayer(players.get(playerNum));
+												return;
+											}else{
+												defendingPlayer.revealACard(players.get(i) + " called your bluff about having " + defense.cardTypeRequired());
+												performAction(playerNum, action); //block failed, player still gets to perform action
+												return;
+											}
+										}
+									} catch (IOException e) {
+										throw new RuntimeException("Could not get player input",e);
+									}
+								}
+							}
+							
+							defense.defendAgainstPlayer(players.get(playerNum));
+							
+							return;
+						}
+					} catch (IOException e) {
+						throw new RuntimeException("Could not get player input",e);
+					}
+				}else{
+					System.out.println("Targeted player has already been eliminated");
+				}
+			}
+		}
+		
+		//If no blocking possible or no choice to block:
+		performAction(playerNum, action);
+	}
+
+	private void performAction(int playerNum, Action action) {
 		action.performAction(players.get(playerNum));
 		String moneyString = "";
 		for(Player player : players){
