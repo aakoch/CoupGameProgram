@@ -16,6 +16,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+//TODO Ideas for expansion/improvement:
+//Give 'play again' option when game is over
+//Keep game history and let players see most recent action and/or whole history 
+//--Maybe after game they can see each action and when the others were bluffing or not
 public class GameControllerServerSide {
 	
 	private final Game game;
@@ -23,10 +27,12 @@ public class GameControllerServerSide {
     private final List<PrintWriter> outWriters;
     private final List<BufferedReader> playerInputs;
     private int curPlayer = -1;
+    public static String gameHistory = "";
 	
 	List<Map<String,Action>> playerActionMaps = new ArrayList<Map<String,Action>>();
 
 	public GameControllerServerSide(Game g, List<PrintWriter> outWriters, List<BufferedReader> playerInputs) {
+		gameHistory = "";
 		this.game = g;
 		this.outWriters = outWriters;
 		this.playerInputs = playerInputs;
@@ -63,6 +69,8 @@ public class GameControllerServerSide {
 		Action action = playerActionMaps.get(playerNum).get(actionStringKey);
 		Player actingPlayer = players.get(playerNum);
 		
+		gameHistory += actingPlayer + " attempted " + actionString(action) + ":::";
+		
 		CardType cardTypeRequired = action.cardTypeRequired();
 		if(cardTypeRequired != null){
 			for(int i = 0; i < outWriters.size(); i++){
@@ -70,18 +78,22 @@ public class GameControllerServerSide {
 					outWriters.get(i).println(Commands.CallBluff.toString() + "+++" + actingPlayer + ":" + cardTypeRequired);
 					try {
 						String response = playerInputs.get(i).readLine();
+						Player bluffCaller = players.get(i);
 						if(response.equals(Responses.AccuseOfBluff.toString())){
 							if(actingPlayer.has(cardTypeRequired)){
 								//bluff caller is wrong
-								Player bluffCaller = players.get(i);
+								gameHistory += bluffCaller + " incorrectly accused " + actingPlayer + " of bluffing.:::";
 								bluffCaller.revealACard("Sorry, you were wrong.  " + actingPlayer + " did have " + cardTypeRequired);
 								//TODO need to reveal two if bluff caller is target of assassin?
 								game.reshuffleCardAndDrawNewCard(actingPlayer, cardTypeRequired);
 								updatePlayerCards();
 								checkForBlockingAndThenPerformAction(playerNum, action);
 							}else{
-								//TODO still pay if attempting assassination??
+								if(cardTypeRequired.equals(CardType.assassin)){
+									actingPlayer.takeActionAssassin();  //TODO still pay if attempting assassination??
+								}
 								actingPlayer.revealACard(players.get(i) + " called your bluff about having " + cardTypeRequired);
+								gameHistory += bluffCaller + " correctly accussed " + actingPlayer + " of bluffing, thus ending this turn.::::::";
 							}
 							return;
 						}
@@ -120,6 +132,7 @@ public class GameControllerServerSide {
 						String response = playerInputs.get(targetedPlayerIndex).readLine();
 						if(response.startsWith(Responses.Block.toString())){
 							Defense defense = defenseStrToDefense.get(response.split("\\+\\+\\+")[1]);
+							gameHistory += defendingPlayer + " attempted to block with " + defense.cardTypeRequired() + ":::";
 							
 							for(int i = 0; i < outWriters.size(); i++){
 								if(i != targetedPlayerIndex){
@@ -127,16 +140,18 @@ public class GameControllerServerSide {
 									try {
 										response = playerInputs.get(i).readLine();
 										if(response.equals(Responses.AccuseOfBluff.toString())){
+											Player bluffCaller = players.get(i);
 											if(defendingPlayer.has(defense.cardTypeRequired())){
 												//bluff caller is wrong
-												Player bluffCaller = players.get(i);
 												bluffCaller.revealACard("Sorry, you were wrong.  " + defendingPlayer + " did have " + defense.cardTypeRequired());
 												game.reshuffleCardAndDrawNewCard(defendingPlayer, defense.cardTypeRequired());
 												updatePlayerCards();
 												defense.defendAgainstPlayer(players.get(playerNum));
+												gameHistory += bluffCaller + " incorrectly accused blocker of bluffing.  " + defendingPlayer + " successfully blocked, thus ending the turn.:::";
 												return;
 											}else{
 												defendingPlayer.revealACard(players.get(i) + " called your bluff about having " + defense.cardTypeRequired());
+												gameHistory += bluffCaller + " correctly accused blocker " + defendingPlayer + " of bluffing.:::";
 												performAction(playerNum, action); //block failed, player still gets to perform action
 												return;
 											}
@@ -148,6 +163,7 @@ public class GameControllerServerSide {
 							}
 							
 							defense.defendAgainstPlayer(players.get(playerNum));
+							gameHistory += defendingPlayer + " successfully blocked, thus ending the turn.::::::";
 							
 							return;
 						}
@@ -166,6 +182,11 @@ public class GameControllerServerSide {
 
 	private void performAction(int playerNum, Action action) {
 		action.performAction(players.get(playerNum));
+		gameHistory += players.get(playerNum) + " successfully completed " + actionString(action);
+		if(action.targetedPlayers() != null && action.targetedPlayers().size() == 1){
+			gameHistory += " against " + action.targetedPlayers().get(0);
+		}
+		gameHistory += " thus ending the turn.:::";
 		String moneyString = "";
 		for(Player player : players){
 			moneyString += player.getCoins() + ":";
@@ -176,6 +197,11 @@ public class GameControllerServerSide {
 		updatePlayerCards();
 	}
 	
+	private String actionString(Action action) {
+		String[] actionPackageParts = action.getClass().getName().split("\\.");
+		return actionPackageParts[actionPackageParts.length - 1];
+	}
+
 	public int advanceToNextPlayer() {
 		
 		List<Integer> playersToRemove = new ArrayList<Integer>();
@@ -190,6 +216,7 @@ public class GameControllerServerSide {
 		
 		if(players.size() == 1){
 			outWriters.get(0).println(Commands.VICTORY);
+			gameHistory += players.get(0) + " WON THE GAME!";
 			return -1;
 		}
 		else{
@@ -227,6 +254,7 @@ public class GameControllerServerSide {
 		}
 		Player nextPlayer = players.get(curPlayer);
 		for(int i : playersToRemove){
+			gameHistory += players.get(i) + " was defeated! :::";
 			players.remove(i);
 			outWriters.get(i).println(Commands.DEFEAT);
 			outWriters.remove(i); //It's done now!

@@ -10,5 +10,5 @@ public enum Commands {
 	ChooseCards,
 	CallBluff,
 	Block,
-	DEFEAT, VICTORY
+	DEFEAT, VICTORY, GAME_OVER //TODO send 'GAME_OVER' with history when someone has won
 }

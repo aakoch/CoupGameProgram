@@ -51,23 +51,7 @@ public class CoupServer {
     			playerNames.add(playerInputs.get(i).readLine());
     		}
             	
-    		List<Player> players = new ArrayList<Player>();
-    		for(int i = 0; i < playerNames.size(); i++){
-    			final String playerName = playerNames.get(i);
-    			final PrintWriter writeToPlayer = playerWriters.get(i);
-    			final BufferedReader readFromPlayer = playerInputs.get(i);
-    			players.add(new RemotePlayer(playerName,writeToPlayer,readFromPlayer));
-    		}
-    		Game g = new Game(players);
-    		g.deal();
-    		GameControllerServerSide gameController = new GameControllerServerSide(g, playerWriters,playerInputs);
-    		
-    		int nextPlayer = gameController.advanceToNextPlayer();
-    		while(nextPlayer != -1){
-    			String playerAction = playerInputs.get(nextPlayer).readLine();
-    			gameController.attemptToPerformAction(nextPlayer,playerAction);
-    			nextPlayer = gameController.advanceToNextPlayer();
-    		}
+    		playGame(playerWriters, playerInputs, playerNames);
     		
 
 //            }
@@ -76,6 +60,51 @@ public class CoupServer {
             System.out.println(e.getMessage());
         }
 
+	}
+
+	private static void playGame(List<PrintWriter> playerWriters,
+			List<BufferedReader> playerInputs, List<String> playerNames)
+			throws IOException {
+		List<PrintWriter> originalPlayerWriters = new ArrayList<PrintWriter>(playerWriters);
+		List<BufferedReader> originalPlayerInputs = new ArrayList<BufferedReader>(playerInputs);
+		List<String> originalPlayerNames = new ArrayList<String>(playerNames);
+		
+		List<Player> players = new ArrayList<Player>();
+		for(int i = 0; i < playerNames.size(); i++){
+			final String playerName = playerNames.get(i);
+			final PrintWriter writeToPlayer = playerWriters.get(i);
+			final BufferedReader readFromPlayer = playerInputs.get(i);
+			players.add(new RemotePlayer(playerName,writeToPlayer,readFromPlayer));
+		}
+		Game g = new Game(players);
+		g.deal();
+		GameControllerServerSide gameController = new GameControllerServerSide(g, playerWriters,playerInputs);
+		
+		int nextPlayer = gameController.advanceToNextPlayer();
+		while(nextPlayer != -1){
+			String playerAction = playerInputs.get(nextPlayer).readLine();
+			gameController.attemptToPerformAction(nextPlayer,playerAction);
+			nextPlayer = gameController.advanceToNextPlayer();
+		}
+		
+		for(int i = 0; i < originalPlayerWriters.size(); i++){
+			originalPlayerWriters.get(i).println(Commands.GAME_OVER + "+++" + GameControllerServerSide.gameHistory);
+		}
+		System.out.println("History: " + GameControllerServerSide.gameHistory);
+		
+		//After game is over check if everyone wants to play again:
+		for(int i = 0; i < originalPlayerInputs.size(); i++){
+			String playAgain = originalPlayerInputs.get(i).readLine();
+			if(!playAgain.equalsIgnoreCase(Responses.RESTART.toString())){
+				throw new RuntimeException("Player responded invalidly about wanting to play again: " + playAgain);
+			}
+		}
+		
+		for(int i = 0; i < originalPlayerWriters.size(); i++){
+			originalPlayerWriters.get(i).println(Responses.READY.toString());//get everyone ready
+		}
+		//If everyone agrees, then play again!
+		playGame(originalPlayerWriters, originalPlayerInputs, originalPlayerNames);
 	}
 
 

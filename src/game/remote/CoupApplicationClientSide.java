@@ -36,6 +36,10 @@ public class CoupApplicationClientSide extends Application {
 
 	@Override
 	public void start(Stage arg0) throws Exception {
+		startNewGame();
+	}
+
+	public static void startNewGame() {
 		playerUi = new PlayerUi(playerForUi,buttonLabels,out,in);
 		commonUi = new CommonKnowledgeUI(allPlayers);
 		
@@ -74,7 +78,10 @@ public class CoupApplicationClientSide extends Application {
 					String action = actionAndDetails[0];
 					String details = actionAndDetails[1];
 					System.out.println(details);
-					if(action.equals(Commands.Block.toString())){
+					if(action.equals(Commands.GAME_OVER.toString())){
+						playerUi.gameOver(details);
+					}
+					else if(action.equals(Commands.Block.toString())){
 						String[] detailParts = details.split("\\+\\+");
 						String attackingPlayer = detailParts[0];
 						String actionAttempting = detailParts[1];

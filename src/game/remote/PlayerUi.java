@@ -7,6 +7,7 @@ import game.actions.Defense;
 import game.ui.javafx.PlayerWithChoices;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
@@ -155,6 +156,34 @@ public class PlayerUi extends Stage{
 		loserText.setVisible(false); //hide until end of game
 		pane.getChildren().add(loserText);
 		
+		gameHistoryText = new Text("Game history will go here");
+		gameHistoryText.setVisible(false);
+		gameHistoryText.setLayoutY(60);
+		pane.getChildren().add(gameHistoryText);
+		
+		playAgainButton = new Button("Click to play again");
+		playAgainButton.setVisible(false);
+		playAgainButton.setOnMouseClicked(new EventHandler<Event>(){
+			@Override
+			public void handle(Event arg0) {
+				playAgainButton.setDisable(true);
+				printToServer.println(Responses.RESTART);
+				try {
+					String ready = inFromServer.readLine();
+					if(ready.equals(Responses.READY.toString())){
+						CoupClient.startNewGame(printToServer, inFromServer);
+						CoupApplicationClientSide.startNewGame();
+					}else{
+						throw new RuntimeException("Invalid server response: " + ready);
+					}
+				} catch (IOException e) {
+					throw new RuntimeException("No response from server",e);
+				}
+			}
+		});
+		pane.getChildren().add(playAgainButton);
+		
+		
 		cardChooserUI = new CardChooserUI(color, printToServer, pane);
 		cardChooserUI.setVisible(false);
 		root.getChildren().add(cardChooserUI);
@@ -209,16 +238,13 @@ public class PlayerUi extends Stage{
 		card2Label.setText(getCardDisplay(player.getSecondCard(),2));
 	}
 
-	public boolean playerIsEliminated() {
-		return player.eliminated();
-	}
-
 	public void updateToDisplayerVictory() {
 		scene.setFill(Color.GREEN);
 		for(Node node : pane.getChildren()){
 			node.setVisible(false);
 		}
 		this.winnerText.setVisible(true);
+		CoupApplicationClientSide.processNextServerMessage();
 	}
 
 	public void updateToDisplayerDefeat() {
@@ -227,7 +253,7 @@ public class PlayerUi extends Stage{
 			node.setVisible(false);
 		}
 		this.loserText.setVisible(true);
-
+		CoupApplicationClientSide.processNextServerMessage();
 	}
 	
 	public void forceToReveal(String reason) {
@@ -251,6 +277,8 @@ public class PlayerUi extends Stage{
 	
 	private Text winnerText;
 	private Text loserText;
+	private Text gameHistoryText; //TODO make this scrollable
+	
 	private CardChooserUI cardChooserUI;
 	
 	private Text bluffCallingText;
@@ -326,6 +354,7 @@ public class PlayerUi extends Stage{
 	}
 	
 	List<String> currentDefenseOptions;
+	private Button playAgainButton;
 
 	protected String getChosenDefense(int i) {
 		return currentDefenseOptions.get(i);
@@ -383,6 +412,13 @@ public class PlayerUi extends Stage{
 		pane.setVisible(false);
 		this.cardChooserUI.updateWithChoices(cardChoiceDetails);
 		cardChooserUI.setVisible(true);
+	}
+
+	public void gameOver(String details) {
+		details = details.replaceAll(":::", "\r\n");
+		gameHistoryText.setText(details);
+		gameHistoryText.setVisible(true);
+		playAgainButton.setVisible(true);
 	}
 
 

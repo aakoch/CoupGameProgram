@@ -6,5 +6,5 @@ public enum Responses {
 	AccuseOfBluff,
 	DoNotAccuseOfBluff, 
 	Block,
-	DoNotBlock
+	DoNotBlock, RESTART, READY
 }
