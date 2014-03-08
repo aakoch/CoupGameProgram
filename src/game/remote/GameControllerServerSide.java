@@ -261,7 +261,7 @@ public class GameControllerServerSide {
 					}
 					outWriters.get(i).println(Commands.ActionsEnable.toString()+"+++"+enabledActions);
 				}else{
-					outWriters.get(i).println(Commands.ActionsDisable.toString());
+					outWriters.get(i).println(Commands.ActionsDisable.toString() + ":" + players.get(curPlayer));
 				}
 			}
 			return curPlayer;

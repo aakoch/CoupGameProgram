@@ -15,6 +15,8 @@ public class CommonKnowledgeUI extends Stage {
 	private List<ExposedPlayerInfo> exposedPlayerUIs = new ArrayList<ExposedPlayerInfo>();
 	private Text currentPlayer;
 	
+	private int ySpacing = 150;
+	
 	public CommonKnowledgeUI(List<Player> allPlayers){
 		
 		AnchorPane root = new AnchorPane();
@@ -29,14 +31,16 @@ public class CommonKnowledgeUI extends Stage {
 			xLoc += 250;
 			if(xLoc >= 500){
 				xLoc = 10;
-				yLoc += 150;
+				yLoc += ySpacing;
 			}
 			root.getChildren().add(playerInfoUI);
 		}
-		currentPlayer = new Text("");
+		currentPlayer = new Text("Indication of whose turn it is will go here");
+		currentPlayer.setLayoutX(5);
+		currentPlayer.setLayoutY(ySpacing * ((allPlayers.size() + 1) / 2));
 		root.getChildren().add(currentPlayer);
 		
-		Scene scene = new Scene(root, 500, 150 * ((allPlayers.size() + 1) / 2));
+		Scene scene = new Scene(root, 500, 50 + ySpacing * ((allPlayers.size() + 1) / 2));
         this.setTitle("Common Knowledge");
         this.setResizable(true);
         this.setScene(scene);
@@ -50,6 +54,7 @@ public class CommonKnowledgeUI extends Stage {
 	}
 
 	public void updateCurrentPlayer(String currentPlayerTurn) {
+		System.out.println("Updating as turn for " + currentPlayerTurn);
 		currentPlayer.setText("Current Player: " + currentPlayerTurn);
 	}
 	

@@ -19,13 +19,26 @@ import javafx.application.Application;
 public class CoupClient {
 
 	public static void main(String[] args){
-		if(args.length < 2){
-			System.out.println("Improper usage.  Must enter args: [host IP] [port]");
+		if(args.length < 1){
+			System.out.println("Improper usage.  Must enter arg: [host IP]");
 			System.exit(1);
 		}
 		String hostName = args[0];
-		int portNumber = Integer.parseInt(args[1]);
-		Socket coupSocket = getSocket(hostName, portNumber);
+		Socket initialConnectSocket = getSocket(hostName, 4444); //initial connection port number
+		int portNum = -1;
+		try {
+			System.out.println("Waiting for further input from server");
+			BufferedReader initialInput = new BufferedReader(
+					new InputStreamReader(initialConnectSocket.getInputStream()));
+			String readLine = initialInput.readLine();
+			System.out.println("Received input from server");
+			portNum = Integer.parseInt(readLine.split(":")[1]);
+			System.out.println("Server says to connect on port " + portNum);
+		} catch (IOException e1) {
+			throw new RuntimeException("Could not get connection port from server");
+		}
+		System.out.println("Attempting to connect on port " + portNum);
+		Socket coupSocket = getSocket(hostName, portNum);
         try {
         	PrintWriter out = new PrintWriter(coupSocket.getOutputStream(), true);
         	BufferedReader in = new BufferedReader(

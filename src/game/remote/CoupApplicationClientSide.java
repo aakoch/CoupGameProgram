@@ -58,7 +58,9 @@ public class CoupApplicationClientSide extends Application {
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
-				System.out.println("NEXT ACTION: " + nextAction);
+				if(!nextAction.startsWith("Update")){
+					System.out.println("NEXT ACTION: " + nextAction);
+				}
 				if(nextAction.startsWith(Commands.ActionsDisable.toString())){
 					playerUi.disableAllActions();
 					String[] disableAndNextPlayer = nextAction.split(":");
