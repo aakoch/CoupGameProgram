@@ -38,10 +38,12 @@ public class CoupServer {
         	for(int portNumber : portNumbers){
         		ServerSocket serverSocket = new ServerSocket(portNumber);
         		Socket clientSocket = serverSocket.accept();
+        		System.out.println("Established connection with player at port " + portNumber);
         		playerWriters.add(new PrintWriter(clientSocket.getOutputStream(), true));
         		playerInputs.add(new BufferedReader(
         				new InputStreamReader(clientSocket.getInputStream())));
         	}
+        	System.out.println("Got all expected connections.  Ready to play.");
         
         	List<String> playerNames = new ArrayList<String>();
     		for(int i = 0; i < portNumbers.size(); i++){
