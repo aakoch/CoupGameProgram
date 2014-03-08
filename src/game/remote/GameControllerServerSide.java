@@ -17,15 +17,20 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 //TODO Ideas for expansion/improvement:
-//Give 'play again' option when game is over
-//Keep game history and let players see most recent action and/or whole history 
-//--Maybe after game they can see each action and when the others were bluffing or not
+//View most recent action in common UI
+//FIXME Do NOT give player option to block after they've already lost!!
 public class GameControllerServerSide {
 	
 	private final Game game;
-    private final List<Player> players;
-    private final List<PrintWriter> outWriters;
-    private final List<BufferedReader> playerInputs;
+    private final List<Player> players; //Current list of players - non-eliminated -- use to send/receive from non-eliminated players
+    
+    private final List<PrintWriter> outWriters; //All outWriters - use to send to all
+    //FIXME will be a problem if multiple have same name
+    private final Map<String, PrintWriter> nameToOutWriter = new HashMap<String, PrintWriter>();
+    
+    private final List<BufferedReader> playerInputs; //All playerInputs - use to listen from all
+    private final HashMap<String, BufferedReader> nameToPlayerInput = new HashMap<String, BufferedReader>();
+    
     private int curPlayer = -1;
     public static String gameHistory = "";
 	
@@ -49,7 +54,12 @@ public class GameControllerServerSide {
 		}
 		
 		for(int i = 0; i < g.getPlayers().size(); i++){
+			
 			Player player = g.getPlayer(i);
+			
+			nameToOutWriter.put(player.toString(), outWriters.get(i));
+			nameToPlayerInput.put(player.toString(), playerInputs.get(i));
+			
 			RemoteCardChooser remoteCardChooser = new RemoteCardChooser(players,outWriters,playerInputs);
 			ActionList playerActions = new ActionList(g,player,remoteCardChooser);
 			Map<String,Action> actionStringToAction = new HashMap<String,Action>();
@@ -73,12 +83,14 @@ public class GameControllerServerSide {
 		
 		CardType cardTypeRequired = action.cardTypeRequired();
 		if(cardTypeRequired != null){
-			for(int i = 0; i < outWriters.size(); i++){
-				if(i != playerNum){
-					outWriters.get(i).println(Commands.CallBluff.toString() + "+++" + actingPlayer + ":" + cardTypeRequired);
+			for(Player nonEliminatedPlayer : players){
+				if(!nonEliminatedPlayer.equals(actingPlayer)){
+					System.out.println("Giving player " + nonEliminatedPlayer.toString() + " the option to call bluff");
+					nameToOutWriter.get(nonEliminatedPlayer.toString()).println(Commands.CallBluff.toString() + "+++" + actingPlayer + ":" + cardTypeRequired
+							+ ":" + singleTargetedPlayer(action));
 					try {
-						String response = playerInputs.get(i).readLine();
-						Player bluffCaller = players.get(i);
+						String response = nameToPlayerInput.get(nonEliminatedPlayer.toString()).readLine();
+						Player bluffCaller = nonEliminatedPlayer;
 						if(response.equals(Responses.AccuseOfBluff.toString())){
 							if(actingPlayer.has(cardTypeRequired)){
 								//bluff caller is wrong
@@ -92,7 +104,7 @@ public class GameControllerServerSide {
 								if(cardTypeRequired.equals(CardType.assassin)){
 									actingPlayer.takeActionAssassin();  //TODO still pay if attempting assassination??
 								}
-								actingPlayer.revealACard(players.get(i) + " called your bluff about having " + cardTypeRequired);
+								actingPlayer.revealACard(bluffCaller + " called your bluff about having " + cardTypeRequired);
 								gameHistory += bluffCaller + " correctly accussed " + actingPlayer + " of bluffing, thus ending this turn.::::::";
 							}
 							return;
@@ -107,8 +119,25 @@ public class GameControllerServerSide {
 		checkForBlockingAndThenPerformAction(playerNum, action);
 	}
 
+	private String singleTargetedPlayer(Action action) {
+		List<Player> targetedPlayers = action.targetedPlayers();
+		if(targetedPlayers != null && targetedPlayers.size() == 1){
+			return targetedPlayers.get(0).toString();
+		}
+		return "";
+	}
+
 	private void checkForBlockingAndThenPerformAction(int playerNum, Action action) {
 		List<Player> targetedPlayers = action.targetedPlayers();
+		if(targetedPlayers != null){
+			List<Player> alreadyEliminatedPlayers = new ArrayList<Player>();
+			for(Player targetedPlayer : targetedPlayers){
+				if(targetedPlayer.eliminated()){
+					alreadyEliminatedPlayers.add(targetedPlayer);
+				}
+			}
+			targetedPlayers.removeAll(alreadyEliminatedPlayers);
+		}
 		List<Defense> defensesThatCanBlock = action.defensesThatCanBlock();
 		if(targetedPlayers != null && !targetedPlayers.isEmpty() && 
 				defensesThatCanBlock != null && !defensesThatCanBlock.isEmpty()){
@@ -134,13 +163,13 @@ public class GameControllerServerSide {
 							Defense defense = defenseStrToDefense.get(response.split("\\+\\+\\+")[1]);
 							gameHistory += defendingPlayer + " attempted to block with " + defense.cardTypeRequired() + ":::";
 							
-							for(int i = 0; i < outWriters.size(); i++){
-								if(i != targetedPlayerIndex){
-									outWriters.get(i).println(Commands.CallBluff.toString() + "+++" + defendingPlayer + ":" + defense.cardTypeRequired());
+							for(Player nonEliminatedPlayer : players){
+								if(!nonEliminatedPlayer.equals(defendingPlayer)){
+									nameToOutWriter.get(nonEliminatedPlayer.toString()).println(Commands.CallBluff.toString() + "+++" + defendingPlayer + ":" + defense.cardTypeRequired());
 									try {
-										response = playerInputs.get(i).readLine();
+										response = nameToPlayerInput.get(nonEliminatedPlayer.toString()).readLine();
 										if(response.equals(Responses.AccuseOfBluff.toString())){
-											Player bluffCaller = players.get(i);
+											Player bluffCaller = nonEliminatedPlayer;
 											if(defendingPlayer.has(defense.cardTypeRequired())){
 												//bluff caller is wrong
 												bluffCaller.revealACard("Sorry, you were wrong.  " + defendingPlayer + " did have " + defense.cardTypeRequired());
@@ -150,7 +179,7 @@ public class GameControllerServerSide {
 												gameHistory += bluffCaller + " incorrectly accused blocker of bluffing.  " + defendingPlayer + " successfully blocked, thus ending the turn.:::";
 												return;
 											}else{
-												defendingPlayer.revealACard(players.get(i) + " called your bluff about having " + defense.cardTypeRequired());
+												defendingPlayer.revealACard(bluffCaller + " called your bluff about having " + defense.cardTypeRequired());
 												gameHistory += bluffCaller + " correctly accused blocker " + defendingPlayer + " of bluffing.:::";
 												performAction(playerNum, action); //block failed, player still gets to perform action
 												return;
@@ -215,7 +244,7 @@ public class GameControllerServerSide {
 		
 		
 		if(players.size() == 1){
-			outWriters.get(0).println(Commands.VICTORY);
+			nameToOutWriter.get(players.get(0).toString()).println(Commands.VICTORY);
 			gameHistory += players.get(0) + " WON THE GAME!";
 			return -1;
 		}
@@ -257,7 +286,7 @@ public class GameControllerServerSide {
 			gameHistory += players.get(i) + " was defeated! :::";
 			players.remove(i);
 			outWriters.get(i).println(Commands.DEFEAT);
-			outWriters.remove(i); //It's done now!
+//			outWriters.remove(i); //It's done now!
 		}
 		return players.indexOf(nextPlayer);
 	}

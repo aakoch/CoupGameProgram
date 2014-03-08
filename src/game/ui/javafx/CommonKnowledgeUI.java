@@ -1,6 +1,5 @@
 package game.ui.javafx;
 
-import game.Game;
 import game.Player;
 
 import java.util.ArrayList;
@@ -8,11 +7,13 @@ import java.util.List;
 
 import javafx.scene.Scene;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 
 public class CommonKnowledgeUI extends Stage {
 
 	private List<ExposedPlayerInfo> exposedPlayerUIs = new ArrayList<ExposedPlayerInfo>();
+	private Text currentPlayer;
 	
 	public CommonKnowledgeUI(List<Player> allPlayers){
 		
@@ -32,6 +33,8 @@ public class CommonKnowledgeUI extends Stage {
 			}
 			root.getChildren().add(playerInfoUI);
 		}
+		currentPlayer = new Text("");
+		root.getChildren().add(currentPlayer);
 		
 		Scene scene = new Scene(root, 500, 150 * ((allPlayers.size() + 1) / 2));
         this.setTitle("Common Knowledge");
@@ -44,6 +47,10 @@ public class CommonKnowledgeUI extends Stage {
 		for(ExposedPlayerInfo exposedPlayerUI : exposedPlayerUIs){
 			exposedPlayerUI.refresh();
 		}
+	}
+
+	public void updateCurrentPlayer(String currentPlayerTurn) {
+		currentPlayer.setText("Current Player: " + currentPlayerTurn);
 	}
 	
 }
