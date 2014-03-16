@@ -8,6 +8,7 @@ import game.ui.javafx.CommonKnowledgeUI;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -57,9 +58,16 @@ public class CoupApplicationClientSide extends Application {
 				} catch (IOException e) {
 					throw new RuntimeException(e);
 				}
-				System.out.println("NEXT ACTION: " + nextAction);
-				if(nextAction.equals(Commands.ActionsDisable.toString())){
+				if(!nextAction.startsWith("Update")){
+					System.out.println("NEXT ACTION: " + nextAction);
+				}
+				if(nextAction.startsWith(Commands.ActionsDisable.toString())){
 					playerUi.disableAllActions();
+					String[] disableAndNextPlayer = nextAction.split(":");
+					if(disableAndNextPlayer.length > 1){
+						String currentPlayerTurn = disableAndNextPlayer[1];
+						commonUi.updateCurrentPlayer(currentPlayerTurn);
+					}
 				}else if(nextAction.equals(Commands.RevealOnlyUnrevealedCard.toString())){
 					playerForUi.revealACard(""); //TODO add reason to command?
 					playerUi.updateCardLabels();
@@ -89,9 +97,15 @@ public class CoupApplicationClientSide extends Application {
 						playerUi.checkIfWantToBlock(attackingPlayer, actionAttempting, defenseOptions);
 					}
 					else if(action.equals(Commands.CallBluff.toString())){
-						String playerAttempting = details.split(":")[0];
-						String actionAttempting = details.split(":")[1];
-						playerUi.checkIfWantToCallBluff(playerAttempting,actionAttempting);
+						String[] splitDetails = details.split(":");
+						String playerAttempting = splitDetails[0];
+						String actionAttempting = splitDetails[1];
+						if(splitDetails.length > 2){
+							String singlePlayerTargeted = details.split(":")[2];
+							playerUi.checkIfWantToCallBluff(playerAttempting,actionAttempting,singlePlayerTargeted);
+						}else{
+							playerUi.checkIfWantToCallBluff(playerAttempting,actionAttempting,"");
+						}
 					}
 					else if(action.equals(Commands.RevealCardChoice.toString())){
 						playerUi.forceToReveal(details);
@@ -99,13 +113,14 @@ public class CoupApplicationClientSide extends Application {
 					else if(action.equals(Commands.ActionsEnable.toString())){
 						Set<String> buttonsToEnable = new HashSet<String>(Arrays.asList(details.split("\\+\\+")));
 						playerUi.enableActions(buttonsToEnable);
+						commonUi.updateCurrentPlayer("YOU!");
 					}
 					else if(action.equals(Commands.ChooseCards.toString())){
 						playerUi.displayCardChooser(details);
 					}
 					else if(action.equals(Commands.UpdateCoins.toString())){
 						String[] newCoinValues = details.split(":");
-						for(int i = 0; i < allPlayers.size(); i++){
+						for(int i = 0; i < allPlayers.size(); i++){ //FIXME was 'allPlayers' before
 							allPlayers.get(i).setCoins(Integer.parseInt(newCoinValues[i]));
 						}
 						playerUi.updateMoneyLabelText();
@@ -125,10 +140,21 @@ public class CoupApplicationClientSide extends Application {
 						}
 						playerUi.updateCardLabels();
 						commonUi.refresh();
+						removeEliminatedPlayers(); //Now that cards are updated, we should know who is eliminated
 						processNextServerMessage();
 					}
 				}
 				
+			}
+
+			private void removeEliminatedPlayers() {
+				List<Player> playersToRemove = new ArrayList<Player>();
+				for(Player player : allPlayers){
+					if(player.eliminated()){
+						playersToRemove.add(player);
+					}
+				}
+				allPlayers.removeAll(playersToRemove);
 			}
 
 			private Card buildNewCard(String[] cardDetails) {

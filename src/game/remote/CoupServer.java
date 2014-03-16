@@ -26,22 +26,33 @@ public class CoupServer {
 			return;
 		}
 		
+		
         List<Integer> portNumbers = new ArrayList<Integer>();
         int firstPort = 4445;
         for(int i = 0; i < numPlayers; i++){
         	portNumbers.add(firstPort + i);
         }
+        
+		int initialConnectionPort = 4444;
 
         try {
         	List<PrintWriter> playerWriters = new ArrayList<PrintWriter>();
         	List<BufferedReader> playerInputs = new ArrayList<BufferedReader>();
+        	ServerSocket initialConnectionServerSocket = new ServerSocket(initialConnectionPort);
         	for(int portNumber : portNumbers){
+				Socket initialConnectionClientSocket = initialConnectionServerSocket.accept();
+				System.out.println("Telling player to connect on port " + portNumber);
+				new PrintWriter(initialConnectionClientSocket.getOutputStream(), true).println("PORT:"+portNumber);
+				//Above tells client which port to use now
         		ServerSocket serverSocket = new ServerSocket(portNumber);
         		Socket clientSocket = serverSocket.accept();
+        		System.out.println("Established connection with player at port " + portNumber);
         		playerWriters.add(new PrintWriter(clientSocket.getOutputStream(), true));
         		playerInputs.add(new BufferedReader(
         				new InputStreamReader(clientSocket.getInputStream())));
         	}
+        	System.out.println("Got all expected connections.  Ready to play.");
+        	initialConnectionServerSocket.close();
         
         	List<String> playerNames = new ArrayList<String>();
     		for(int i = 0; i < portNumbers.size(); i++){

@@ -396,8 +396,9 @@ public class PlayerUi extends Stage{
 	
 
 	public void checkIfWantToCallBluff(String playerAttempting,
-			String cardUsedForActionAttempting) {
-		bluffCallingText.setText(playerAttempting + " is claiming to have " + cardUsedForActionAttempting);
+			String cardUsedForActionAttempting, String singlePlayerTargeted) {
+		bluffCallingText.setText(playerAttempting + " is claiming to have " + cardUsedForActionAttempting
+				+ (singlePlayerTargeted.isEmpty() ? "" : (" and is targeting " + singlePlayerTargeted)));
 		bluffCallingPane.setVisible(true);
 	}
 
